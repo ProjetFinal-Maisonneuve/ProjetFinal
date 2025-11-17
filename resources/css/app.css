@@ -12,16 +12,23 @@
         "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
         "Noto Color Emoji";
 
+    --font-main: "Inter", system-ui, sans-serif;
+    --font-heading: "Inter", system-ui, sans-serif;
+
     /* Couleur de Base */
-    --color-primary: #1d4ed8;
-    --color-secondary: #9333ea;
+    --color-primary: #a4161a;
+    --color-primary-hover: #821217; /* Hover */
+    --color-primary-active: #660f13; /* Active */
+
+    --icon-color: var(--color-neutral-600);
+    --icon-hover: var(--color-neutral-800);
 
     --color-danger: #ef4444;
     --color-success: #22c55e;
     --color-warning: #facc15;
 
     /* Couleurs Neutres */
-    --color-neutral-100: #f3f4f6;
+    --color-neutral-100: #ffffff;
     --color-neutral-200: #e5e7eb;
     --color-neutral-300: #d1d5db;
     --color-neutral-400: #9ca3af;
@@ -29,14 +36,14 @@
     --color-neutral-600: #4b5563;
     --color-neutral-700: #374151;
     --color-neutral-800: #1f2937;
-    --color-neutral-900: #111827;
+    --color-neutral-900: #000000;
 
     /* UI Globales */
-    --bg-body: var(--color-neutral-100);
-    --bg-card: #ffffff;
+    --bg-body: var(--color-neutral-300);
+    --bg-card: var(--color-neutral-100);
     --text-body: var(--color-neutral-700);
     --text-heading: var(--color-neutral-900);
-    --border-base: var(--color-neutral-200);
+    --border-base: var(--color-neutral-400);
 
     /* Ombres */
     --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
@@ -70,9 +77,6 @@
     --text-2xl: 24px;
     --text-3xl: 30px;
     --text-4xl: 36px;
-
-    --font-main: "Inter", system-ui, sans-serif;
-    --font-heading: "Inter", system-ui, sans-serif;
 
     /* Transition */
     --transition-fast: 150ms;
