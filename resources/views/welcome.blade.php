@@ -16,7 +16,14 @@ dsada
                                 {{-- Image de la bouteille --}}
                                 @if($bouteille->url_image)
                                     <div class="flex-shrink-0 w-24 h-24 flex items-center justify-center bg-gray-50 rounded">
-                                        <img src="{{ asset($bouteille->url_image) }}" 
+                                        @php
+                                            // Normaliser le chemin pour s'assurer qu'il commence par / pour les chemins de stockage local
+                                            $imageUrl = $bouteille->url_image;
+                                            if (strpos($imageUrl, 'storage/') === 0 && strpos($imageUrl, '/storage/') !== 0) {
+                                                $imageUrl = '/' . $imageUrl;
+                                            }
+                                        @endphp
+                                        <img src="{{ asset($imageUrl) }}" 
                                              alt="{{ $bouteille->nom }}" 
                                              class="max-w-full max-h-full object-contain"
                                              onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/%3E%3Ctext fill=%22%23999%22 font-family=%22Arial%22 font-size=%2212%22 dy=%2210.5%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22%3EAucune image%3C/text%3E%3C/svg%3E'">

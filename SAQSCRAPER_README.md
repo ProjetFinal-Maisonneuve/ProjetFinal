@@ -28,7 +28,12 @@ Pour chaque produit récupéré, le service :
 - **Détermine le type de vin** : Rouge, Blanc, Rosé, Champagne, Spiritueux (basé sur les attributs couleur et identité)
 - **Identifie le pays et la région** : À partir des attributs `pays_origine` et `region_origine`
 - **Extrait les métadonnées** : Millésime, volume, images
-- **Télécharge les images** : Stockage local dans `storage/app/public/products/`
+- **Télécharge et normalise les images** : 
+  - Téléchargement depuis l'URL SAQ avec gestion des erreurs HTTP
+  - Normalisation automatique des URLs (correction des doublons de domaine)
+  - Optimisation des images swatch (remplacement 30x30 → 500x500)
+  - Stockage local dans `storage/app/public/products/`
+  - Logging détaillé pour le débogage
 
 ### 3. Sauvegarde en base de données
 
@@ -44,6 +49,11 @@ La méthode `updateOrCreate` assure qu'un produit avec le même code SAQ sera mi
 - **Délai entre requêtes** : Configurable (défaut : 2 secondes) pour respecter les limites de l'API
 - **Gestion des erreurs** : Logging détaillé des erreurs sans interrompre l'importation
 - **Retry logic** : Gestion automatique des échecs temporaires
+- **Logging des images** : 
+  - Logs de niveau `debug` : URLs originale et finale, nom de fichier
+  - Logs de niveau `info` : Succès de téléchargement
+  - Logs de niveau `warning` : Images vides détectées
+  - Logs de niveau `error` : Erreurs de téléchargement avec contexte complet (URL, message d'erreur, trace)
 
 ## 📋 Configuration
 
@@ -160,7 +170,7 @@ Pour chaque bouteille, les informations suivantes sont importées :
 | `region` | Région ou appellation | Attributs `region_origine` / `appellation` |
 | `millesime` | Année de récolte | Attribut `millesime_produit` |
 | `volume` | Taille de la bouteille | Attribut `format_contenant_ml` |
-| `url_image` | Chemin local de l'image | Téléchargée depuis `product.image.url` |
+| `url_image` | Chemin local de l'image (format: `/storage/products/produit_XXXXX.ext`) | Téléchargée depuis `product.image.url` ou `product.small_image.url`, normalisée et stockée localement |
 | `date_import` | Date et heure d'importation | Timestamp automatique |
 
 ## 🔍 Vérification des données importées
@@ -189,16 +199,28 @@ App\Models\BouteilleCatalogue::join('type_vin', 'bouteille_catalogue.id_type_vin
 
 1. **Respect des limites de l'API** : Utilisez un délai approprié (minimum 2 secondes recommandé) pour éviter d'être bloqué par l'API de la SAQ.
 
-2. **Images** : Les images sont téléchargées et stockées localement. Assurez-vous que le lien symbolique `storage` est créé :
-   ```bash
-   php artisan storage:link
-   ```
+2. **Images** : 
+   - Les images sont téléchargées et stockées localement dans `storage/app/public/products/`
+   - Le service normalise automatiquement les URLs (corrige les doublons de domaine, optimise les miniatures)
+   - **IMPORTANT** : Assurez-vous que le lien symbolique `storage` est créé pour permettre l'accès public aux images :
+     ```bash
+     php artisan storage:link
+     ```
+   - Les chemins sont stockés au format `/storage/products/produit_XXXXX.ext` pour compatibilité avec `asset()`
+   - En cas d'échec de téléchargement, l'URL originale SAQ est conservée comme fallback
+   - Consultez les logs (`storage/logs/laravel.log`) pour diagnostiquer les problèmes de téléchargement d'images
 
 3. **Performance** : L'importation complète du catalogue peut prendre plusieurs heures. Utilisez l'option `--limite` pour tester d'abord.
 
 4. **Mises à jour** : Relancer la commande mettra à jour les produits existants (basé sur le `code_saQ`) plutôt que de créer des doublons.
 
-5. **Erreurs** : Consultez les logs Laravel (`storage/logs/laravel.log`) pour diagnostiquer les problèmes d'importation.
+5. **Erreurs** : Consultez les logs Laravel (`storage/logs/laravel.log`) pour diagnostiquer les problèmes d'importation. Les logs incluent :
+   - Erreurs de requêtes GraphQL
+   - Erreurs de téléchargement d'images (avec URL et contexte)
+   - Produits importés avec succès
+   - Messages de débogage pour le traitement des images
+
+6. **Affichage des images** : Pour afficher les images dans les vues Blade, utilisez `asset($bouteille->url_image)`. Les vues normalisent automatiquement les chemins pour gérer les anciens formats (`storage/products/...` → `/storage/products/...`).
 
 ## 🛠️ Développement
 
@@ -242,4 +264,27 @@ $vinsFrance = BouteilleCatalogue::whereHas('pays', function($query) {
     $query->where('nom', 'France');
 })->get();
 ```
+
+### Afficher les images dans les vues Blade
+
+```blade
+{{-- Dans une vue Blade (ex: welcome.blade.php) --}}
+@if($bouteille->url_image)
+    @php
+        // Normaliser le chemin pour compatibilité avec les anciens formats
+        $imageUrl = $bouteille->url_image;
+        if (strpos($imageUrl, 'storage/') === 0 && strpos($imageUrl, '/storage/') !== 0) {
+            $imageUrl = '/' . $imageUrl;
+        }
+    @endphp
+    <img src="{{ asset($imageUrl) }}" 
+         alt="{{ $bouteille->nom }}" 
+         class="max-w-full max-h-full object-contain"
+         onerror="this.src='data:image/svg+xml,...'">
+@else
+    <div>Aucune image</div>
+@endif
+```
+
+**Note** : Les vues incluses dans le projet normalisent automatiquement les chemins, mais cette normalisation manuelle peut être nécessaire pour des vues personnalisées.
 

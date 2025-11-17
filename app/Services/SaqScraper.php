@@ -397,7 +397,8 @@ GRAPHQL;
             'nom' => $nom,
             'prix' => $prix,
             'description' => $description,
-            'url_image' => $cheminImage ? 'storage/products/' . basename($cheminImage) : ($urlImage ?: null),
+            // Stocker le chemin avec un slash initial pour la compatibilité avec asset()
+            'url_image' => $cheminImage ? '/storage/products/' . basename($cheminImage) : ($urlImage ?: null),
             'volume' => $volume,
             'millesime' => $millesime,
             'region' => $region,
@@ -450,45 +451,87 @@ GRAPHQL;
         return null;
     }
 
+    /**
+     * Télécharge une image depuis une URL et la sauvegarde dans le stockage public.
+     * 
+     * Gère la normalisation des URLs (ajout du domaine de base si nécessaire,
+     * suppression des doublons de domaine) et optimise les images swatch pour
+     * obtenir une meilleure résolution.
+     * 
+     * @param string|null $urlImage URL de l'image à télécharger
+     * @param string $codeSaq Code SAQ du produit pour générer le nom de fichier
+     * @return string|null Chemin relatif de l'image sauvegardée (ex: 'products/produit_12345.jpg') 
+     *                     ou null en cas d'échec
+     */
     private function telechargerImage($urlImage, $codeSaq)
     {
         try {
             if (empty($urlImage)) {
+                Log::debug("Image URL vide pour produit {$codeSaq}");
                 return null;
             }
 
-            if (strpos($urlImage, 'http') !== 0) {
+            // Sauvegarder l'URL originale pour le débogage
+            $originalUrl = $urlImage;
+            
+            // Normaliser l'URL - gérer les cas où l'URL pourrait déjà être complète ou avoir des doublons
+            if (!preg_match('/^https?:\/\//', $urlImage)) {
+                // Pas une URL complète, ajouter l'URL de base
                 if (strpos($urlImage, '/media/') === 0) {
                     $urlImage = $this->baseUrl . $urlImage;
                 } else {
                     $urlImage = $this->baseUrl . '/' . ltrim($urlImage, '/');
                 }
             }
-
+            
+            // Supprimer les doublons de domaine si ils ont été ajoutés par erreur
+            // (corrige le bug: https://www.saq.com/www.saq.com/...)
+            $urlImage = preg_replace('#https?://www\.saq\.com/www\.saq\.com/#', 'https://www.saq.com/', $urlImage);
+            
+            // Extraire l'extension du fichier depuis le chemin de l'URL
             $cheminUrl = parse_url($urlImage, PHP_URL_PATH);
             $extension = pathinfo($cheminUrl, PATHINFO_EXTENSION) ?: 'jpg';
             
+            // Optimiser les images swatch pour obtenir une meilleure résolution
+            // Remplace les miniatures 30x30 par des versions 500x500
             if (strpos($urlImage, '/media/attribute/swatch/swatch_image/') !== false) {
                 $urlImage = str_replace('/30x30/', '/500x500/', $urlImage);
             }
 
+            // Générer un nom de fichier sécurisé basé sur le code SAQ
             $nomFichier = 'produit_' . preg_replace('/[^a-zA-Z0-9]/', '_', $codeSaq) . '.' . $extension;
             $chemin = 'products/' . $nomFichier;
 
+            Log::debug("Téléchargement image pour produit {$codeSaq}", [
+                'original_url' => $originalUrl,
+                'final_url' => $urlImage,
+                'filename' => $nomFichier
+            ]);
+
+            // Télécharger l'image via HTTP avec un timeout de 15 secondes
             $reponseImage = $this->client->get($urlImage, [
                 'timeout' => 15,
             ]);
             
             $contenuImage = $reponseImage->getBody()->getContents();
             
+            // Vérifier que le contenu téléchargé n'est pas vide
             if (strlen($contenuImage) > 0) {
+                // Sauvegarder l'image dans le disque public
                 Storage::disk('public')->put($chemin, $contenuImage);
+                Log::info("Image téléchargée avec succès pour produit {$codeSaq}: {$chemin}");
                 return $chemin;
             }
 
+            Log::warning("Image vide téléchargée pour produit {$codeSaq} depuis {$urlImage}");
             return null;
         } catch (\Exception $e) {
-            Log::error("Erreur lors du téléchargement de l'image {$urlImage}: " . $e->getMessage());
+            // Logger les erreurs de téléchargement avec le contexte complet
+            Log::error("Erreur lors du téléchargement de l'image pour produit {$codeSaq}", [
+                'url' => $urlImage ?? $originalUrl ?? 'inconnue',
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return null;
         }
     }
