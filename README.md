@@ -1,59 +1,74 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# 🍷 Projet Web 2 – Vino
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Vino** est une application web permettant à chaque utilisateur de gérer un ou plusieurs celliers de vin.  
+Elle intègre le catalogue officiel de la SAQ via une API GraphQL, permet d’ajouter des bouteilles personnalisées, de noter ses dégustations et de trier/rechercher facilement.  
+Développée en équipe selon la méthode Agile/Scrum dans le cadre du cours **582-41W** au Collège de Maisonneuve. 
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## 📌 Objectif du projet
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+Permettre à un utilisateur de :
+- Gérer un ou plusieurs celliers de vin.
+- Ajouter, modifier et supprimer des bouteilles.
+- Importer et consulter le catalogue officiel de la SAQ.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+---
 
-## Learning Laravel
+## 🚀 Fonctionnalités clés (en cours de développement)
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+- ✅ Maquettes mobiles (Accueil, Cellier, Authentification)
+- ✅ Base technique Laravel avec support MySQL
+- ⏳ **Import automatisé du catalogue SAQ** via GraphQL (Adobe Commerce API)
+- ⏳ Authentification (connexion / inscription)
+- ⏳ Gestion multi-celliers par utilisateur
+- ⏳ CRUD complet sur les bouteilles de cellier
+- ⏳ Recherche & filtres (nom, type, pays, millésime…)
+- ⏳ Notes de dégustation, liste d’achat, partage social
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## ⚙️ Stack technique
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+| Couche        | Technologie                        |
+|---------------|------------------------------------|
+| **Backend**   | Laravel 12, PHP 8.2                |
+| **Frontend**  | Blade, Tailwind CSS v4, Vite       |
+| **Base de données** | SQLite (migrations incluses) |
+| **API externe** | GraphQL (Adobe Commerce – SAQ)   |
+| **HTTP client** | Guzzle 7.10                      |
+| **Tests**     | PHPUnit 11.5                       |
+| **Design**    | Figma (mobile-first)               |
+| **Gestion projet** | Jira (Scrum/Agile)            |
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## 🔗 Liens utiles
+Maquettes Figma
+Backlog & Sprint Board (Jira)
+Dépôt GitHub
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## 👥 Équipe de développement
+Samaneh Mahboudi
+Philippe Cossette
+Adil El Amrani
+Tommy Bourgeois
 
-## Code of Conduct
+---
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## 🛠️ Installation & démarrage
 
-## Security Vulnerabilities
+### Prérequis
+- PHP 8.2+
+- Composer
+- Node.js 
+- MySQL
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### Étapes
 
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+1. **Cloner le dépôt**
+   ```bash
+   git clone https://github.com/ProjetFinal-Maisonneuve/ProjetFinal.git
+   cd  ProjetFinal
