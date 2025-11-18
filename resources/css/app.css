@@ -87,4 +87,20 @@
     /* TRANSITION DURATIONS */
     --duration-fast: 150ms;
     --duration-base: 250ms;
+
+    /* Animations */
+    @keyframes shake {
+        0%,
+        100% {
+            transform: translateY(0);
+        }
+        25% {
+            transform: translateY(-0.5px);
+        }
+        75% {
+            transform: translateY(0.5px);
+        }
+    }
+
+    --animate-shake: shake 0.4s ease-in-out infinite;
 }
