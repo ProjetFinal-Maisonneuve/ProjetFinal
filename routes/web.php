@@ -26,3 +26,4 @@ Route::middleware('auth')->group(function () {
     // Page principale après login/inscription
     Route::get('/celliers', [CellierController::class, 'index'])->name('celliers.index');
 });
+
