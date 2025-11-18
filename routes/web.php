@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CellierController;
 use App\Http\Controllers\AccueilController;
+use App\Http\Controllers\BouteilleManuelleController;
 
 Route::get('/', [AccueilController::class, 'index'])->name('welcome');
 
@@ -14,6 +15,14 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register.form');
     Route::post('/register', [AuthController::class, 'register'])->name('register');
+
+     // Formulaire d'ajout manuel
+    Route::get('/celliers/{cellier}/bouteilles/ajout', [BouteilleManuelleController::class, 'create'])
+        ->name('bouteilles.manuelles.create');
+
+    // Traitement du formulaire
+    Route::post('/celliers/{cellier}/bouteilles/ajout', [BouteilleManuelleController::class, 'store'])
+        ->name('bouteilles.manuelles.store');
 });
 
 // Déconnexion : seulement si connecté
@@ -27,7 +36,3 @@ Route::middleware('auth')->group(function () {
     Route::get('/celliers', [CellierController::class, 'index'])->name('celliers.index');
 });
 
-// Temporaire: route de test pour la vue des celliers
-Route::get('/cellierstest', function () {
-    return view('cellar.index');
-});

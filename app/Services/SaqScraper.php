@@ -118,33 +118,66 @@ class SaqScraper
         try {
             $query = $this->construireQueryProduits();
             
-            $variables = [
-                'phrase' => '',
-                'pageSize' => $pageSize,
-                'currentPage' => $page,
-                'filter' => [
-                    [
-                        'attribute' => 'categoryPath',
-                        'eq' => 'produits'
-                    ],
-                    [
-                        'attribute' => 'availability_front',
-                        'in' => [
-                            'En ligne',
-                            'En succursale',
-                            'Disponible bientôt',
-                            'Bientôt en loterie',
-                            'En loterie'
-                        ]
-                    ],
-                    [
-                        'attribute' => 'visibility',
-                        'in' => [
-                            'Catalog',
-                            'Catalog, Search'
-                        ]
+            $filters = [
+                [
+                    'attribute' => 'categoryPath',
+                    'eq' => $categorie ?? 'produits'
+                ],
+                [
+                    'attribute' => 'availability_front',
+                    'in' => [
+                        'En ligne',
+                        'En succursale',
+                        'Disponible bientôt',
+                        'Bientôt en loterie',
+                        'En loterie'
                     ]
                 ],
+                [
+                    'attribute' => 'visibility',
+                    'in' => [
+                        'Catalog',
+                        'Catalog, Search'
+                    ]
+                ]
+            ];
+
+            // Si la catégorie contient des mots-clés de couleur/type, utiliser une recherche par phrase
+            // car l'API SAQ pourrait ne pas supporter les chemins de catégorie spécifiques comme "produits/vin-rouge"
+            $phrase = '';
+            $categoryPathValue = $categorie ?? 'produits';
+            
+            if ($categorie) {
+                $categorieLower = strtolower($categorie);
+                
+                // Si la catégorie contient des mots-clés, utiliser une recherche par phrase
+                // et remettre le categoryPath à "produits" car les chemins spécifiques ne fonctionnent pas
+                if (strpos($categorieLower, 'rouge') !== false || strpos($categorieLower, 'vin-rouge') !== false) {
+                    $phrase = 'vin rouge';
+                    $categoryPathValue = 'produits';
+                } elseif (strpos($categorieLower, 'blanc') !== false || strpos($categorieLower, 'vin-blanc') !== false) {
+                    $phrase = 'vin blanc';
+                    $categoryPathValue = 'produits';
+                } elseif (strpos($categorieLower, 'rosé') !== false || strpos($categorieLower, 'rose') !== false || strpos($categorieLower, 'vin-rosé') !== false || strpos($categorieLower, 'vin-rose') !== false) {
+                    $phrase = 'vin rosé';
+                    $categoryPathValue = 'produits';
+                } elseif (strpos($categorieLower, 'champagne') !== false) {
+                    $phrase = 'champagne';
+                    $categoryPathValue = 'produits';
+                } elseif (strpos($categorieLower, 'spiritueux') !== false) {
+                    $phrase = 'spiritueux';
+                    $categoryPathValue = 'produits';
+                }
+            }
+            
+            // Mettre à jour le filtre categoryPath avec la valeur correcte
+            $filters[0]['eq'] = $categoryPathValue;
+            
+            $variables = [
+                'phrase' => $phrase,
+                'pageSize' => $pageSize,
+                'currentPage' => $page,
+                'filter' => $filters,
                 'sort' => [
                     [
                         'attribute' => 'price',
@@ -156,13 +189,6 @@ class SaqScraper
                     'userViewHistory' => []
                 ]
             ];
-
-            if ($categorie) {
-                $variables['filter'][] = [
-                    'attribute' => 'categoryPath',
-                    'eq' => $categorie
-                ];
-            }
 
             $response = $this->faireRequeteGraphQL($query, $variables);
             $data = json_decode($response, true);
