@@ -14,9 +14,6 @@ class Cellier extends Model
     // Nom de la table dans la base de données
     protected $table = 'cellier';
 
-    // Nom de la clé primaire
-    protected $primaryKey = 'id_cellier';
-    
     // Désactive les colonnes 'created_at' et 'updated_at' (selon le schéma bd_vino.pdf)
     public $timestamps = false; 
 
@@ -27,7 +24,6 @@ class Cellier extends Model
     protected $fillable = [
         'nom',
         'id_utilisateur',
-        'date_creation',
     ];
 
     /**
