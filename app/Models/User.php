@@ -54,7 +54,7 @@ class User extends Authenticatable
      */
     public function celliers()
     {
-        return $this->hasMany(Cellier::class);
+         return $this->hasMany(Cellier::class, 'user_id', 'id');
     }
 
     /**
