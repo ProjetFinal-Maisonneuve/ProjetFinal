@@ -5,13 +5,27 @@ namespace App\Http\Controllers;
 use App\Models\Cellier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
 
+/**
+ * Contrôleur pour la gestion des celliers.
+ * 
+ * Ce contrôleur gère toutes les opérations CRUD (Create, Read, Update, Delete)
+ * liées aux celliers des utilisateurs authentifiés.
+ * 
+ * @package App\Http\Controllers
+ */
 class CellierController extends Controller
 {
     /**
-     * Liste les celliers de l'utilisateur connecté.
+     * Affiche la liste de tous les celliers de l'utilisateur connecté.
+     * 
+     * Les celliers sont triés par date de création décroissante (les plus récents en premier).
+     * 
+     * @return View La vue contenant la liste des celliers
      */
-    public function index()
+    public function index(): View
     {
         $user = Auth::user();
 
@@ -23,17 +37,25 @@ class CellierController extends Controller
     }
 
     /**
-     * Formulaire de création d'un nouveau cellier.
+     * Affiche le formulaire de création d'un nouveau cellier.
+     * 
+     * @return View La vue du formulaire de création
      */
-    public function create()
+    public function create(): View
     {
         return view('cellar.create');
     }
 
     /**
-     * Enregistre un nouveau cellier en BD.
+     * Enregistre un nouveau cellier dans la base de données.
+     * 
+     * Valide les données du formulaire et crée un nouveau cellier
+     * associé à l'utilisateur connecté.
+     * 
+     * @param Request $request La requête HTTP contenant les données du formulaire
+     * @return RedirectResponse Redirection vers la liste des celliers avec un message de succès
      */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
             'nom' => 'required|string|max:255',
@@ -51,9 +73,15 @@ class CellierController extends Controller
     }
 
     /**
-     * (Optionnel) Affiche un cellier spécifique.
+     * Affiche les détails d'un cellier spécifique.
+     * 
+     * Vérifie que le cellier appartient bien à l'utilisateur connecté
+     * avant d'afficher les détails.
+     * 
+     * @param Cellier $cellier Le cellier à afficher
+     * @return View La vue contenant les détails du cellier
      */
-    public function show(Cellier $cellier)
+    public function show(Cellier $cellier): View
     {
         $this->authorizeCellier($cellier);
 
@@ -61,9 +89,15 @@ class CellierController extends Controller
     }
 
     /**
-     * Formulaire d’édition d’un cellier.
+     * Affiche le formulaire d'édition d'un cellier existant.
+     * 
+     * Vérifie que le cellier appartient bien à l'utilisateur connecté
+     * avant d'afficher le formulaire.
+     * 
+     * @param Cellier $cellier Le cellier à modifier
+     * @return View La vue du formulaire d'édition
      */
-    public function edit(Cellier $cellier)
+    public function edit(Cellier $cellier): View
     {
         $this->authorizeCellier($cellier);
 
@@ -71,9 +105,16 @@ class CellierController extends Controller
     }
 
     /**
-     * Met à jour un cellier existant.
+     * Met à jour un cellier existant dans la base de données.
+     * 
+     * Valide les données du formulaire et met à jour les informations
+     * du cellier. Vérifie que le cellier appartient bien à l'utilisateur connecté.
+     * 
+     * @param Request $request La requête HTTP contenant les données du formulaire
+     * @param Cellier $cellier Le cellier à modifier
+     * @return RedirectResponse Redirection vers la liste des celliers avec un message de succès
      */
-    public function update(Request $request, Cellier $cellier)
+    public function update(Request $request, Cellier $cellier): RedirectResponse
     {
         $this->authorizeCellier($cellier);
 
@@ -93,9 +134,15 @@ class CellierController extends Controller
     }
 
     /**
-     * Supprime un cellier.
+     * Supprime un cellier de la base de données.
+     * 
+     * Vérifie que le cellier appartient bien à l'utilisateur connecté
+     * avant de le supprimer.
+     * 
+     * @param Cellier $cellier Le cellier à supprimer
+     * @return RedirectResponse Redirection vers la liste des celliers avec un message de succès
      */
-    public function destroy(Cellier $cellier)
+    public function destroy(Cellier $cellier): RedirectResponse
     {
         $this->authorizeCellier($cellier);
 
@@ -108,6 +155,13 @@ class CellierController extends Controller
 
     /**
      * Vérifie que le cellier appartient bien à l'utilisateur connecté.
+     * 
+     * Si le cellier n'appartient pas à l'utilisateur connecté,
+     * une erreur 403 (Forbidden) est générée.
+     * 
+     * @param Cellier $cellier Le cellier à vérifier
+     * @return void
+     * @throws \Illuminate\Http\Exceptions\HttpResponseException Si l'utilisateur n'est pas autorisé
      */
     protected function authorizeCellier(Cellier $cellier): void
     {

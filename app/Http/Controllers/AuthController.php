@@ -6,23 +6,40 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
 
+/**
+ * Contrôleur pour la gestion de l'authentification.
+ * 
+ * Ce contrôleur gère toutes les opérations liées à l'authentification :
+ * connexion, inscription et déconnexion des utilisateurs.
+ * 
+ * @package App\Http\Controllers
+ */
 class AuthController extends Controller
 {
     /**
-     * Affiche la page d'authentification
-     * en mode "inscription" (register).
+     * Affiche la page d'authentification en mode "inscription" (register).
+     * 
+     * @return View La vue du formulaire d'inscription
      */
-    public function showRegisterForm()
+    public function showRegisterForm(): View
     {
         // On envoie à la vue une variable "mode" pour afficher le bon formulaire.
         return view('auth.auth', ['mode' => 'register']);
     }
 
     /**
-     * Traite le formulaire d'inscription.
+     * Traite le formulaire d'inscription et crée un nouveau compte utilisateur.
+     * 
+     * Valide les données du formulaire, crée l'utilisateur en base de données,
+     * connecte automatiquement l'utilisateur et redirige vers la page des celliers.
+     * 
+     * @param Request $request La requête HTTP contenant les données du formulaire
+     * @return RedirectResponse Redirection vers la page des celliers avec un message de succès
      */
-    public function register(Request $request)
+    public function register(Request $request): RedirectResponse
     {
         // 1) Validation des données envoyées par le formulaire.
         //    La règle "confirmed" attend un champ "password_confirmation".
@@ -52,26 +69,34 @@ class AuthController extends Controller
         // 4) Régénération de la session pour plus de sécurité.
         $request->session()->regenerate();
 
-        // 5) Redirection vers la page principale 
+        // 5) Redirection vers la page des celliers 
         return redirect()
-            ->route('celliers.index')
+            ->route('cellar.index')
             ->with('success', 'Félicitations! Votre compte a été créé et vous êtes connecté.');
     }
 
     /**
-     * Affiche la page d'authentification
-     * en mode "connexion" (login).
+     * Affiche la page d'authentification en mode "connexion" (login).
+     * 
+     * @return View La vue du formulaire de connexion
      */
-    public function showLoginForm()
+    public function showLoginForm(): View
     {
         // Même vue que pour l'inscription, mais avec le mode "login".
         return view('auth.auth', ['mode' => 'login']);
     }
 
     /**
-     * Traite le formulaire de connexion.
+     * Traite le formulaire de connexion et authentifie l'utilisateur.
+     * 
+     * Valide les identifiants fournis, tente de connecter l'utilisateur
+     * et redirige vers la page des celliers en cas de succès.
+     * 
+     * @param Request $request La requête HTTP contenant les identifiants (email et mot de passe)
+     * @return RedirectResponse Redirection vers la page des celliers en cas de succès, 
+     *                         ou retour au formulaire avec erreur en cas d'échec
      */
-    public function login(Request $request)
+    public function login(Request $request): RedirectResponse
     {
         // 1) Validation de base des champs.
         $credentials = $request->validate([
@@ -84,10 +109,9 @@ class AuthController extends Controller
             // 3) Si connexion réussie, on régénère la session.
             $request->session()->regenerate();
 
-            // 4) Redirection vers la page protégée,
-            //     vers 'celliers.index' par défaut.
+            // 4) Redirection vers la page des celliers
             return redirect()
-                ->intended(route('celliers.index'))
+                ->intended(route('cellar.index'))
                 ->with('success', 'Connexion réussie.');
         }
 
@@ -100,9 +124,15 @@ class AuthController extends Controller
     }
 
     /**
-     * Déconnecte l'utilisateur.
+     * Déconnecte l'utilisateur actuellement connecté.
+     * 
+     * Déconnecte l'utilisateur, invalide la session en cours,
+     * régénère le token CSRF et redirige vers la page de connexion.
+     * 
+     * @param Request $request La requête HTTP
+     * @return RedirectResponse Redirection vers la page de connexion avec un message de succès
      */
-    public function logout(Request $request)
+    public function logout(Request $request): RedirectResponse
     {
         // 1) Déconnexion de l'utilisateur.
         Auth::logout();

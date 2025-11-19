@@ -4,14 +4,16 @@
         label="Adresse courriel" 
         name="email" 
         type="email" 
-        placeholder="Entrez votre adresse courriel" 
+        placeholder="Entrez votre adresse courriel"
+        value="test@example.com"
     />
 
     <x-input 
         label="Mot de passe" 
         name="password" 
         type="password" 
-        placeholder="Entrez votre mot de passe" 
+        placeholder="Entrez votre mot de passe"
+        value="password"
     />
 
     <x-primary-btn type="submit" label="Connexion" />
