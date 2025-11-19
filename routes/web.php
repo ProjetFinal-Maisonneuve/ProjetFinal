@@ -52,4 +52,12 @@ Route::middleware('auth')->group(function () {
     // Suppression de bouteille dans un cellier
     Route::delete('/celliers/{cellier}/bouteilles/{bouteille}', [CellierController::class, 'deleteBottle'])
         ->name('bouteilles.delete');
+
+    Route::get('/celliers/{cellier}/bouteilles/{bouteille}/modifier', [CellierController::class, 'editBottle'])
+        ->name('bouteilles.edit');
+
+    Route::put(
+        '/celliers/{cellier}/bouteilles/{bouteille}',
+        [CellierController::class, 'updateBottle']
+    )->name('bouteilles.update');
 });

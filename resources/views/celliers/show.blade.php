@@ -58,6 +58,12 @@
                                 @endif
                             </div>
                                 <x-delete-btn label="Supprimer la bouteille" route="{{ route('bouteilles.delete', ['cellier' => $cellier->id, 'bouteille' => $bouteille->id]) }}" />
+                                @if ($bouteille->code_saq === null)
+                                    <a href="{{ route('bouteilles.edit', [$cellier->id, $bouteille->id]) }}"
+                                    class="text-blue-600 hover:underline">
+                                        Modifier
+                                    </a>
+                                @endif
                         </div>
                     @endforeach
                 </div>
