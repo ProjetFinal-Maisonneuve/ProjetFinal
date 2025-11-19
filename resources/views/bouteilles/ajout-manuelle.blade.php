@@ -56,7 +56,7 @@
                 placeholder="Ex : 12.50"
             />
 
-            <div class="pt-4 flex justify-end">
+            <div class="pt-4 flex justify-between">
                 <x-primary-btn
                     label="Ajouter la bouteille"
                     type="submit"

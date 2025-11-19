@@ -1,5 +1,5 @@
 @props(['title'=>'titre', 'undertitle' => '', 'actionBtn' => false])
-<header class="mt-header flex flex-wrap justify-between">
+<header class="mt-header flex flex-wrap justify-between items-center">
 <div>
     <h1 class="text-3xl font-bold font-heading text-heading">{{ $title }}</h1>
     @if ($undertitle !== '')

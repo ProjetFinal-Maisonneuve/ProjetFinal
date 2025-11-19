@@ -61,7 +61,7 @@
                 value="{{ old('prix', $bouteille->prix) }}"
             />
 
-            <div class="pt-4 flex justify-end">
+            <div class="pt-4 flex justify-between">
                 <x-primary-btn
                     label="Modifier la bouteille"
                     type="submit"
