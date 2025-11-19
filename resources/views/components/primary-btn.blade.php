@@ -1,3 +1,3 @@
 @props(['label' => 'Click Me', 'type' => 'button', 'route' => '', 'rounded' => 'lg'])
 {{-- Si $route est défini, ajoute un onclick pour rediriger vers la route --}}
-<button @if ($route) onclick="window.location='{{ route($route) }}'" @endif class='bg-primary text-white font-bold py-2 px-4 rounded-{{ $rounded }} hover:bg-primary-hover transition-colors duration-300 {{ $attributes->get('class') }}' id="{{ $attributes->get('id') }}">{{ $label }}</button>
+<a @if ($route) href='{{ route($route) }}' @endif class='bg-primary text-white font-bold py-2 px-4 rounded-{{ $rounded }} hover:bg-primary-hover transition-colors duration-300 {{ $attributes->get('class') }}' id="{{ $attributes->get('id') }}">{{ $label }}</a>
