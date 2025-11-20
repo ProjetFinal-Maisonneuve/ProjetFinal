@@ -30,6 +30,7 @@
             :addWineBtn="$__env->hasSection('add-wine-btn')"
         />
         <x-toast />
+        <x-confirm-delete-modal />
     </body>
 
     </html>

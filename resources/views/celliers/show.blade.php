@@ -154,7 +154,7 @@
     />
     <x-icon-text-btn
         :href="route('bouteilles.manuelles.create', $cellier->id)"
-        icon="wine"
+        icon="notebook-pen"
         title="Ajouter Manuellement"
         subtitle="Pour les vins non répertoriés à la SAQ."
     />
