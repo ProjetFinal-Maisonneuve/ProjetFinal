@@ -48,7 +48,7 @@ class BouteilleManuelleController extends Controller
 
         // 4) Redirection vers la vue principale du cellier
         return redirect()
-            ->route('cellar.show', $cellier)
+            // ->route('cellar.show', $cellier)
             ->route('cellar.index')
             ->with('success', 'Bouteille ajoutée manuellement avec succès.');
     }
@@ -60,30 +60,29 @@ class BouteilleManuelleController extends Controller
      */
     public function updateQuantite(Request $request, Cellier $cellier, Bouteille $bouteille)
     {
-        // 1) Vérifier que l’utilisateur est bien propriétaire du cellier
-        if ($cellier->user_id !== Auth::id()) {
+        // Vérifie que la bouteille appartient bien à ce cellier
+        if ($bouteille->cellier_id !== $cellier->id) {
             abort(403);
         }
 
-        // 2) Vérifier que la bouteille appartient bien à ce cellier
-        if ($bouteille->cellier_id !== $cellier->id) {
-            abort(404);
+        $direction = $request->input('direction');
+
+        if ($direction === 'up') {
+            $bouteille->quantite++;
+        } elseif ($direction === 'down') {
+            // On ne descend pas en dessous de 1
+            if ($bouteille->quantite > 1) {
+                $bouteille->quantite--;
+            }
+        } else {
+            return response()->json([
+                'success' => false,
+                'message' => 'Direction invalide',
+            ], 422);
         }
 
-        // 3) Validation de la direction
-        $validated = $request->validate([
-            'direction' => 'required|in:up,down',
-        ]);
-
-        $delta = $validated['direction'] === 'up' ? 1 : -1;
-
-        // 4) Calcul de la nouvelle quantité (minimum 0)
-        $nouvelleQuantite = max(0, $bouteille->quantite + $delta);
-
-        $bouteille->quantite = $nouvelleQuantite;
         $bouteille->save();
 
-        // 5) Réponse JSON 
         return response()->json([
             'success'  => true,
             'quantite' => $bouteille->quantite,

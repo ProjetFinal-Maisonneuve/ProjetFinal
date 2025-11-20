@@ -1,97 +1,85 @@
 @extends('layouts.app')
 
-@section('title', 'Vue du cellier')
+@section('title', $cellier->nom)
 
 @section('content')
-<div class="min-h-screen bg-background pt-24">
-    <div class="max-w-5xl mx-auto space-y-6">
+<div class="min-h-screen bg-gray-50 pt-20">
+    <div class="max-w-4xl mx-auto p-4">
 
         {{-- En-tête du cellier --}}
-        <div class="bg-card border border-border-base rounded-xl shadow-md p-6 flex items-center justify-between">
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-8 flex items-center justify-between flex-col sm:flex-row gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-text-title">
+                <h1 class="text-3xl font-bold text-gray-800">
                     {{ $cellier->nom }}
                 </h1>
-                <p class="text-sm text-text-muted">
-                    Vue principale du cellier – liste des bouteilles.
+                <p class="text-gray-500">
+                    Bouteilles dans ce cellier.
                 </p>
             </div>
 
-            <a
-                href="{{ route('bouteilles.manuelles.create', $cellier) }}"
-                class="bg-primary text-white font-bold py-2 px-4 rounded-lg hover:bg-primary-hover transition-colors duration-300 text-sm"
-            >
+            <a href="{{ route('bouteilles.manuelles.create', $cellier) }}"
+               class="bg-red-800 hover:bg-red-900 text-white font-bold py-3 px-8 rounded-full transition">
                 Ajouter une bouteille
             </a>
         </div>
 
         {{-- Liste des bouteilles --}}
-        <div class="bg-card border border-border-base rounded-xl shadow-md p-6">
-            @if ($cellier->bouteilles->isEmpty())
-                <p class="text-text-muted">
-                    Ce cellier est encore vide. Utilisez le bouton « Ajouter une bouteille » pour commencer.
-                </p>
+        <div class="space-y-6">
+            @if($cellier->bouteilles->isEmpty())
+                <div class="bg-white rounded-2xl shadow-lg p-16 text-center text-gray-500">
+                    Aucune bouteille pour le moment.
+                </div>
             @else
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    @foreach ($cellier->bouteilles as $bouteille)
-                        <div
-                            class="border border-border-base rounded-lg p-4 flex flex-col gap-3"
-                            data-bottle-id="{{ $bouteille->id }}"
-                        >
-                            <div class="flex items-center justify-between gap-2">
-                                <h2 class="font-semibold text-text-title">
-                                    {{ $bouteille->nom }}
-                                </h2>
+                @foreach($cellier->bouteilles as $bouteille)
+                    <div class="bg-white rounded-2xl shadow-lg p-6 flex flex-col md:flex-row justify-between items-center gap-6">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800">
+                                {{ $bouteille->nom }}
+                            </h2>
 
-                                {{-- Badge quantité avec boutons +/- (logique JS/API à faire dans PV-9 / PV-17) --}}
-                                <div class="flex items-center gap-2">
-                                    <button
-                                        type="button"
-                                        class="bottle-qty-minus inline-flex items-center justify-center w-7 h-7 rounded-full border border-border-base text-primary hover:bg-primary/10"
-                                    >
-                                        –
-                                    </button>
-
-                                    <span
-                                        class="bottle-qty-value inline-flex items-center justify-center rounded-full bg-primary text-white text-xs px-2 py-0.5"
-                                    >
-                                        x {{ $bouteille->quantite }}
-                                    </span>
-
-                                    <button
-                                        type="button"
-                                        class="bottle-qty-plus inline-flex items-center justify-center w-7 h-7 rounded-full border border-border-base text-primary hover:bg-primary/10"
-                                    >
-                                        +
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="text-sm text-text-muted space-y-1">
-                                @if ($bouteille->pays)
-                                    <p>
-                                        <span class="font-medium text-text-body">Pays :</span>
-                                        {{ $bouteille->pays }}
-                                    </p>
+                            <div class="text-gray-600 space-y-1 mt-2">
+                                @if($bouteille->pays)
+                                    <p>Pays : {{ $bouteille->pays }}</p>
                                 @endif
 
-                                @if ($bouteille->format)
-                                    <p>
-                                        <span class="font-medium text-text-body">Format :</span>
-                                        {{ $bouteille->format }}
-                                    </p>
+                                @if($bouteille->format)
+                                    <p>Format : {{ $bouteille->format }}</p>
                                 @endif
 
-                                @if (!is_null($bouteille->prix))
-                                    <p>
-                                        <span class="font-medium text-text-body">Prix :</span>
-                                        {{ number_format($bouteille->prix, 2, ',', ' ') }} $
-                                    </p>
+                                @if($bouteille->prix !== null)
+                                    <p>Prix : {{ number_format($bouteille->prix, 2, ',', ' ') }} $</p>
                                 @endif
                             </div>
                         </div>
-                    @endforeach
-                </div>
+
+                        {{-- Boutons quantité --}}
+                        <div class="flex items-center gap-4">
+                            {{-- Bouton - --}}
+                            <button type="button"
+                                    class="qty-btn w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-2xl font-thin shadow-md transition"
+                                    data-url="{{ route('bouteilles.quantite.update', [$cellier, $bouteille]) }}"
+                                    data-direction="down"
+                                    data-bouteille="{{ $bouteille->id }}">
+                                −
+                            </button>
+
+                            {{-- Affichage quantité --}}
+                            <div class="qty-display bg-red-800 text-white font-bold text-lg px-6 py-2 rounded-full min-w-20 text-center shadow-lg"
+                                 data-bouteille="{{ $bouteille->id }}">
+                                x {{ $bouteille->quantite ?? 1 }}
+                            </div>
+
+                            {{-- Bouton + --}}
+                            <button type="button"
+                                    class="qty-btn w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-2xl font-thin shadow-md transition"
+                                    data-url="{{ route('bouteilles.quantite.update', [$cellier, $bouteille]) }}"
+                                    data-direction="up"
+                                    data-bouteille="{{ $bouteille->id }}">
+                                +
+                            </button>
+                        </div>
+                    </div>
+                @endforeach
             @endif
         </div>
     </div>

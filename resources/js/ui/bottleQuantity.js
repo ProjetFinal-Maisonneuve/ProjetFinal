@@ -1,52 +1,56 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const buttons = document.querySelectorAll("[data-qty-btn]");
+    const buttons = document.querySelectorAll(".qty-btn");
     if (!buttons.length) return;
 
-    const csrfTokenMeta = document.querySelector('meta[name="csrf-token"]');
-    const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute("content") : null;
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    const csrfToken = csrfMeta ? csrfMeta.getAttribute("content") : "";
 
     buttons.forEach((btn) => {
-        btn.addEventListener("click", async () => {
-            const direction = btn.dataset.direction;
-            const cellierId = btn.dataset.cellierId;
-            const bottleId = btn.dataset.bottleId;
+        btn.addEventListener("click", () => {
+            const url        = btn.dataset.url;
+            const direction  = btn.dataset.direction;
+            const bouteilleId = btn.dataset.bouteille;
 
-            const valueSpan = document.querySelector(
-                `[data-qty-value="${bottleId}"]`
+            const display = document.querySelector(
+                `.qty-display[data-bouteille="${bouteilleId}"]`
             );
 
-            if (!direction || !cellierId || !bottleId || !valueSpan) {
+            if (!url || !direction || !display) {
                 console.error("Données manquantes pour la mise à jour de quantité.");
                 return;
             }
 
-            try {
-                const response = await fetch(
-                    `/celliers/${cellierId}/bouteilles/${bottleId}/quantite`,
-                    {
-                        method: "PATCH",
-                        headers: {
-                            "Content-Type": "application/json",
-                            Accept: "application/json",
-                            ...(csrfToken ? { "X-CSRF-TOKEN": csrfToken } : {}),
-                        },
-                        body: JSON.stringify({ direction }),
+            const oldText = display.textContent;
+            display.textContent = "x ...";
+
+            fetch(url, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                    Accept: "application/json",
+                    "X-CSRF-TOKEN": csrfToken,
+                },
+                body: JSON.stringify({ direction }),
+            })
+                .then((res) => {
+                    console.log("Réponse API quantité:", res.status);
+                    if (!res.ok) {
+                        throw new Error("Réponse serveur non OK");
                     }
-                );
-
-                if (!response.ok) {
-                    console.error("Erreur API quantité", await response.text());
-                    return;
-                }
-
-                const data = await response.json();
-
-                if (data.success && typeof data.quantite !== "undefined") {
-                    valueSpan.textContent = `x ${data.quantite}`;
-                }
-            } catch (error) {
-                console.error("Erreur réseau lors de la mise à jour de quantité", error);
-            }
+                    return res.json();
+                })
+                .then((data) => {
+                    console.log("Données JSON:", data);
+                    if (data.success && typeof data.quantite !== "undefined") {
+                        display.textContent = `x ${data.quantite}`;
+                    } else {
+                        display.textContent = oldText;
+                    }
+                })
+                .catch((err) => {
+                    console.error("Erreur quantité:", err);
+                    display.textContent = oldText;
+                });
         });
     });
 });
