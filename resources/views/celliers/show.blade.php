@@ -52,7 +52,7 @@
                             </div>
                         </div>
 
-                        {{-- Boutons quantité --}}
+                        {{-- Boutons quantité et actions --}}
                         <div class="flex items-center gap-4">
                             {{-- Bouton - --}}
                             <button type="button"
@@ -77,6 +77,32 @@
                                     data-bouteille="{{ $bouteille->id }}">
                                 +
                             </button>
+
+                            {{-- Boutons Modifier et Supprimer --}}
+                            <div class="flex items-center gap-2 ml-4">
+                                <a 
+                                    href="{{ route('bouteilles.edit', [$cellier, $bouteille]) }}"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm"
+                                >
+                                    Modifier
+                                </a>
+                                
+                                <form 
+                                    action="{{ route('bouteilles.delete', [$cellier, $bouteille]) }}" 
+                                    method="POST" 
+                                    class="inline"
+                                    onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cette bouteille ?');"
+                                >
+                                    @csrf
+                                    @method('DELETE')
+                                    <button 
+                                        type="submit"
+                                        class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm"
+                                    >
+                                        Supprimer
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 @endforeach
