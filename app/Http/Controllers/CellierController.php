@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
+use App\Models\User;
+use App\Models\BouteilleCatalogue;
 use App\Models\Bouteille;
 
 /**
@@ -25,7 +27,7 @@ class CellierController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
-          $celliers = $user->celliers()
+        $celliers = $user->celliers()
             ->orderBy('nom')
             ->get();
 
@@ -55,12 +57,12 @@ class CellierController extends Controller
     {
         $validated = $request->validate([
             'nom' => 'required|string|max:255',
-           
+
         ]);
 
         $request->user()->celliers()->create([
             'nom' => $validated['nom'],
-            
+
         ]);
 
         return redirect()
@@ -224,6 +226,60 @@ class CellierController extends Controller
             ->route('cellar.show', $cellier->id)
             ->with('success', 'La bouteille a été mise à jour avec succès.');
     }
+
+
+    // Ajout de bouteille du catalogue au cellier via API
+    public function ajoutBouteilleApi(Request $request)
+    {
+        // 1. Trouver la bouteille dans le catalogue
+        $catalogBottle = BouteilleCatalogue::find($request->bottle_id);
+
+        // Vérifier si la bouteille du catalogue existe
+        if (!$catalogBottle) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Bouteille du catalogue non trouvée'
+            ], 404);
+        }
+
+        // 2. Vérifier si la bouteille existe déjà dans le cellier
+        $bottleExist = Bouteille::where('cellier_id', $request->cellar_id)
+            ->where('nom', $catalogBottle->nom)
+            ->first();
+
+        // 3. Si elle existe, augmenter la quantité
+        if ($bottleExist) {
+            $bottleExist->quantite += $request->quantity;
+            $bottleExist->save();
+
+            // Retourner une réponse JSON indiquant que la quantité a été augmentée
+            return response()->json([
+                'success' => true,
+                'message' => 'Quantité augmentée',
+                'data' => $bottleExist
+            ]);
+        }
+
+        // 4. Sinon, créer une nouvelle entrée dans le cellier
+        $new = new Bouteille();
+        $new->cellier_id = $request->cellar_id;
+        $new->nom = $catalogBottle->nom;
+        $new->pays = $catalogBottle->pays->nom;
+        $new->format = $catalogBottle->format;
+        $new->quantite = $request->quantity;
+        $new->prix = $catalogBottle->prix;
+
+        // Enregistrer la nouvelle bouteille dans le cellier
+        $new->save();
+
+        // Retourner une réponse JSON indiquant que la bouteille a été ajoutée
+        return response()->json([
+            'success' => true,
+            'message' => 'Bouteille ajoutée avec succès',
+            'data' => $new
+        ]);
+    }
+
 
     /**
      * Vérifie que le cellier appartient bien à l'utilisateur connecté.

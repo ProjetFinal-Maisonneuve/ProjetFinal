@@ -6,6 +6,8 @@ import "./ui/authForm";
 import "./ui/toggleCellarAction";
 import "./ui/bottleQuantity";
 import "./ui/addWineOptionToggle";
+import "./ui/confirmDelete";
+import "./ui/addToCellar";
 
 /* ============================================================
    MODULE : Toasts – Petites notifications
@@ -128,4 +130,3 @@ function updateQuantity(id, qtyBadge, delta) {
             showToast("Erreur serveur. Réessayez plus tard.", "error");
         });
 }
-

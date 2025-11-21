@@ -38,4 +38,9 @@ class Bouteille extends Model
     {
         return $this->belongsTo(Cellier::class);
     }
+
+    public function addToCellier(Cellier $cellier, array $attributes)
+    {
+        
+    }   
 }

@@ -6,7 +6,7 @@ use App\Http\Controllers\CellierController;
 use App\Http\Controllers\AccueilController;
 use App\Http\Controllers\BouteilleManuelleController;
 
-Route::get('/', [AccueilController::class, 'index'])->name('welcome');
+Route::get('/', [AccueilController::class, 'index'])->name('bouteille.catalogue');
 
 // Routes accessibles seulement aux invités (non connectés)
 Route::middleware('guest')->group(function () {
@@ -49,6 +49,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/celliers/{cellier}/bouteilles/ajout', [BouteilleManuelleController::class, 'store'])
         ->name('bouteilles.manuelles.store');
 
+    Route::post('/api/ajout/cellier', [CellierController::class, 'ajoutBouteilleApi'])->name('api.ajout.cellier');
+
+    // Pour Recuperer les cellier du user
+    Route::get('/api/celliers', function () {
+        return $user = auth()->user()->celliers()->withCount('bouteilles')->get();
+    })->name('api.celliers');
+
+
 
 
     /**
@@ -77,4 +85,3 @@ Route::patch(
     '/celliers/{cellier}/bouteilles/{bouteille}/quantite',
     [BouteilleManuelleController::class, 'updateQuantite']
 )->name('bouteilles.quantite.update');
-

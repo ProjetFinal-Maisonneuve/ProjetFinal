@@ -1,4 +1,5 @@
-@props(['name'=>'Cellier', 'amount' => '0', 'id' => ''])
+{{-- Props permis --}}
+@props(['name'=>'Cellier', 'amount' => '0', 'id' => '', 'editable' => true])
 
 <div class="cellar-box relative p-3 bg-card rounded-lg shadow-md border border-border-base hover:shadow-sm transition-all duration-300">
     {{-- Lien cliquable partout --}}
@@ -17,10 +18,13 @@
             @endif
         </div>
 
-        {{-- Boutons : pointer-events-auto pour réactiver les clics --}}
-        <div class="cellar-action-btns hidden flex gap-2 items-center pointer-events-auto">
-            <x-edit-btn :route="route('cellar.edit', $id)" />
-            <x-delete-btn :route="route('cellar.destroy', $id)" />
-        </div>
+        @if ($editable === true)
+                {{-- Boutons : pointer-events-auto pour réactiver les clics --}}
+            <div class="cellar-action-btns hidden flex gap-2 items-center pointer-events-auto">
+                <x-edit-btn :route="route('cellar.edit', $id)" />
+                <x-delete-btn :route="route('cellar.destroy', $id)" />
+            </div>    
+        @endif
+        
     </div>
 </div>
