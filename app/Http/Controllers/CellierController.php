@@ -258,7 +258,7 @@ class CellierController extends Controller
         $new = new Bouteille();
         $new->cellier_id = $request->cellar_id;
         $new->nom = $catalogBottle->nom;
-        $new->pays = $catalogBottle->pays;
+        $new->pays = $catalogBottle->pays->nom;
         $new->format = $catalogBottle->format;
         $new->quantite = $request->quantity;
         $new->prix = $catalogBottle->prix;
