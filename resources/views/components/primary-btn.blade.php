@@ -11,12 +11,8 @@
                 hover:bg-primary-hover transition-colors duration-300 block text-center";
 
     // Détection automatique :
-    // - si route() est un NAME → on génère un URL
-    // - si c'est déjà une URL → on ne touche pas
     if ($route) {
-        $href = str_starts_with($route, 'http')
-            ? $route
-            : route($route);
+    $href = route($route);
     } else {
         $href = '#';
     }
