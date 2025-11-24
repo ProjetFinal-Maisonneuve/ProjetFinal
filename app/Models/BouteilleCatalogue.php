@@ -47,4 +47,3 @@ class BouteilleCatalogue extends Model
         return $this->belongsTo(TypeVin::class, 'id_type_vin');
     }
 }
-

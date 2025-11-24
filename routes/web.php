@@ -4,9 +4,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CellierController;
 use App\Http\Controllers\AccueilController;
+use App\Http\Controllers\CatalogueController;
 use App\Http\Controllers\BouteilleManuelleController;
 
-Route::get('/', [AccueilController::class, 'index'])->name('bouteille.catalogue');
+
 
 // Routes accessibles seulement aux invités (non connectés)
 Route::middleware('guest')->group(function () {
@@ -24,7 +25,7 @@ Route::post('/logout', [AuthController::class, 'logout'])
 
 // Routes protégées : seulement accessibles si la session est ouverte
 Route::middleware('auth')->group(function () {
-
+    Route::get('/', [CatalogueController::class, 'index'])->name('bouteille.catalogue');
     // --- Gestion des celliers ---
 
     // Liste des celliers

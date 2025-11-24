@@ -24,14 +24,4 @@ class AccueilController extends Controller
      * 
      * @return View La vue de la page d'accueil avec les bouteilles du catalogue
      */
-    public function index(): View
-    {
-        // Récupère les 10 dernières bouteilles importées avec leurs relations
-        $bouteilles = BouteilleCatalogue::with(['pays', 'typeVin'])
-            ->orderBy('date_import', 'desc')
-            ->limit(10)
-            ->get();
-
-        return view('bouteilles.catalogue', compact('bouteilles'));
-    }
 }
