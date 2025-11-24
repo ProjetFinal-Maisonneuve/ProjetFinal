@@ -133,7 +133,7 @@
 
     <div class="flex flex-col gap-4">
         <x-icon-text-btn
-            :href="route('bouteilles.manuelles.create', $cellier->id)"
+            :href="route('bouteille.catalogue')"
             icon="wine"
             title="Explorer le catalogue SAQ"
             subtitle="Recherchez des vins répertoriés à la SAQ."
