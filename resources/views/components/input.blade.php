@@ -35,7 +35,8 @@
             focus:ring-color-focus
             focus:ring-1
         "
-    >
+        {{ $attributes }}
+    />        
 
     @error($name)
         <p class="text-red-600 text-sm">{{ $message }}</p>
