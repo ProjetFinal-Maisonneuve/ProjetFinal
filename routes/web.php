@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CellierController;
 use App\Http\Controllers\AccueilController;
 use App\Http\Controllers\BouteilleManuelleController;
+use App\Http\Controllers\ProfileController;
 
 Route::get('/', [AccueilController::class, 'index'])->name('bouteille.catalogue');
 
@@ -85,3 +86,11 @@ Route::patch(
     '/celliers/{cellier}/bouteilles/{bouteille}/quantite',
     [BouteilleManuelleController::class, 'updateQuantite']
 )->name('bouteilles.quantite.update');
+
+
+Route::middleware('auth')->group(function () {
+
+    // PROFIL
+    Route::get('/profil', [ProfileController::class, 'index'])->name('profile.index');
+
+    });
