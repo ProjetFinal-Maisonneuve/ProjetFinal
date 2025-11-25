@@ -182,7 +182,8 @@ Pour chaque bouteille, les informations suivantes sont importées :
 | `region` | Région ou appellation | Attributs `region_origine` / `appellation` |
 | `millesime` | Année de récolte | Attribut `millesime_produit` |
 | `volume` | Taille de la bouteille | Attribut `format_contenant_ml` |
-| `url_image` | Chemin local de l'image (format: `/storage/products/produit_XXXXX.ext`) | Téléchargée depuis `product.image.url` ou `product.small_image.url`, normalisée et stockée localement |
+| `url_image` | Chemin local de l'image (format: `products/produit_XXXXX.ext`) | Téléchargée depuis `product.image.url` ou `product.small_image.url`, normalisée et stockée localement |
+| `image` | URL complète formatée (via accessor) | Accessor `getImageAttribute()` qui normalise `url_image` et génère l'URL complète via `asset()` |
 | `date_import` | Date et heure d'importation | Timestamp automatique |
 
 ## 🔍 Vérification des données importées
@@ -242,7 +243,7 @@ App\Models\BouteilleCatalogue::join('type_vin', 'bouteille_catalogue.id_type_vin
    - Produits importés avec succès
    - Messages de débogage pour le traitement des images
 
-7. **Affichage des images** : Pour afficher les images dans les vues Blade, utilisez `asset($bouteille->url_image)`. Les vues normalisent automatiquement les chemins pour gérer les anciens formats (`storage/products/...` → `/storage/products/...`).
+7. **Affichage des images** : Le modèle `BouteilleCatalogue` inclut un accessor `getImageAttribute()` qui normalise automatiquement les chemins d'images et génère les URLs complètes. Utilisez simplement `$bouteille->image` dans vos vues Blade pour obtenir l'URL formatée prête à l'emploi. L'accessor gère automatiquement la normalisation des chemins (`storage/products/...` → URL complète via `asset()`).
 
 ## 🛠️ Développement
 
@@ -251,6 +252,7 @@ Pour modifier ou étendre le service :
 - **Service** : `app/Services/SaqScraper.php`
 - **Commande** : `app/Console/Commands/ImporterProduitsSaq.php`
 - **Modèles** : `app/Models/BouteilleCatalogue.php`, `app/Models/Pays.php`, `app/Models/TypeVin.php`
+  - Le modèle `BouteilleCatalogue` inclut un accessor `getImageAttribute()` pour simplifier l'accès aux images formatées
 
 ## 📝 Exemples de code
 
@@ -289,17 +291,12 @@ $vinsFrance = BouteilleCatalogue::whereHas('pays', function($query) {
 
 ### Afficher les images dans les vues Blade
 
+Le modèle `BouteilleCatalogue` inclut un accessor qui simplifie l'affichage des images :
+
 ```blade
 {{-- Dans une vue Blade (ex: welcome.blade.php) --}}
-@if($bouteille->url_image)
-    @php
-        // Normaliser le chemin pour compatibilité avec les anciens formats
-        $imageUrl = $bouteille->url_image;
-        if (strpos($imageUrl, 'storage/') === 0 && strpos($imageUrl, '/storage/') !== 0) {
-            $imageUrl = '/' . $imageUrl;
-        }
-    @endphp
-    <img src="{{ asset($imageUrl) }}" 
+@if($bouteille->image)
+    <img src="{{ $bouteille->image }}" 
          alt="{{ $bouteille->nom }}" 
          class="max-w-full max-h-full object-contain"
          onerror="this.src='data:image/svg+xml,...'">
@@ -308,5 +305,5 @@ $vinsFrance = BouteilleCatalogue::whereHas('pays', function($query) {
 @endif
 ```
 
-**Note** : Les vues incluses dans le projet normalisent automatiquement les chemins, mais cette normalisation manuelle peut être nécessaire pour des vues personnalisées.
+**Note** : L'accessor `getImageAttribute()` dans le modèle normalise automatiquement le chemin et génère l'URL complète via `asset()`. Vous pouvez utiliser `$bouteille->image` directement sans manipulation manuelle du chemin. Si vous avez besoin d'accéder au chemin brut stocké en base de données, utilisez `$bouteille->url_image`.
 
