@@ -116,5 +116,7 @@ Route::middleware('auth')->group(function () {
 
     // PROFIL
     Route::get('/profil', [ProfileController::class, 'index'])->name('profile.index');
+    Route::post('/profil/update-info', [ProfileController::class, 'updateInfo'])->name('profile.updateInfo');
+    Route::post('/profil/update-password', [ProfileController::class, 'updatePassword'])->name('profile.updatePassword');
 
     });
