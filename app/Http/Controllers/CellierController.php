@@ -424,6 +424,10 @@ class CellierController extends Controller
 
         if ($bottleExist) {
             $bottleExist->quantite += $request->quantity;
+            // Mettre à jour le code_saq si ce n'est pas déjà défini (pour les anciennes bouteilles)
+            if (empty($bottleExist->code_saq) && !empty($catalogBottle->code_saQ)) {
+                $bottleExist->code_saq = $catalogBottle->code_saQ;
+            }
             $bottleExist->save();
 
             return response()->json([
@@ -440,6 +444,7 @@ class CellierController extends Controller
         $new->format     = $catalogBottle->format;
         $new->quantite   = $request->quantity;
         $new->prix       = $catalogBottle->prix;
+        $new->code_saq   = $catalogBottle->code_saQ; // Stocker le code SAQ pour identifier les bouteilles importées
         $new->save();
 
         return response()->json([

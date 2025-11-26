@@ -18,20 +18,27 @@
 @endphp
 
 {{-- Carte de bouteille --}}
-<div class='flex flex-col justify-between bg-card rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer'>
+<div class='flex flex-col justify-between bg-card rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden'>
+    {{-- Image cliquable --}}
     @if($isCatalogueMode)
         <a href="{{ route('catalogue.show', $id) }}" class="flex flex-col">
     @elseif($isCellierMode)
         <a href="{{ route('bouteilles.show', [$cellierId, $bouteilleId]) }}" class="flex flex-col">
     @endif
     
-    <picture class='w-full h-32 overflow-hidden bg-neutral-400 flex items-center justify-center'>
+    <picture class='w-full h-32 overflow-hidden bg-neutral-400 flex items-center justify-center cursor-pointer'>
         @if ($image === null)
-            <p class="text-text-muted text-sm">Aucune image</p>
+            <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+            </svg>
         @else
             <img src='{{ $image }}' alt='Image de la bouteille {{ $nom }}' class='w-full h-full object-contain object-center hover:scale-105 transition-transform duration-300'/>
         @endif
     </picture>
+    
+    @if($isCatalogueMode || $isCellierMode)
+        </a>
+    @endif
     
     <div class='p-4 flex flex-col gap-2'>
         <div class="flex items-center justify-between gap-2">
@@ -111,6 +118,23 @@
 
         {{-- Actions --}}
         <div class="flex gap-2 {{ $isCellierMode ? 'mt-auto stop-link-propagation' : 'flex-row-reverse flex-wrap justify-end' }}">
+            {{-- Bouton Consulter --}}
+            @if($isCatalogueMode)
+                <a 
+                    href="{{ route('catalogue.show', $id) }}"
+                    class="inline-flex items-center justify-center px-3 py-1.5 rounded-md bg-primary text-white text-sm hover:bg-primary-hover transition-colors duration-200 stop-link-propagation"
+                >
+                    Consulter
+                </a>
+            @elseif($isCellierMode)
+                <a 
+                    href="{{ route('bouteilles.show', [$cellierId, $bouteilleId]) }}"
+                    class="inline-flex items-center justify-center px-3 py-1.5 rounded-md bg-primary text-white text-sm hover:bg-primary-hover transition-colors duration-200 stop-link-propagation"
+                >
+                    Consulter
+                </a>
+            @endif
+
             @if($isCatalogueMode)
                 {{-- Formulaire d'ajout au cellier --}}
                 <form class="flex gap-3 flex-row-reverse flex-wrap justify-end add-to-cellar-form stop-link-propagation w-full">
@@ -146,7 +170,8 @@
                     ])"
                 />
 
-                @if ($codeSaq === null)
+                {{-- Afficher le bouton Modifier uniquement pour les bouteilles ajoutées manuellement (sans code SAQ) --}}
+                @if (empty($codeSaq))
                     <x-edit-btn
                         :route="route('bouteilles.edit', [$cellierId, $bouteilleId])"
                         label="Modifier"
@@ -155,8 +180,4 @@
             @endif
         </div>
     </div>
-    
-    @if($isCatalogueMode || $isCellierMode)
-        </a>
-    @endif
 </div>

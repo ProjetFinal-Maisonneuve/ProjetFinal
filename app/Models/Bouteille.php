@@ -21,6 +21,7 @@ class Bouteille extends Model
         'prix',
         'note_degustation',
         'rating',
+        'code_saq',
     ];
 
     /**
