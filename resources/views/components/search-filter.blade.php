@@ -27,7 +27,7 @@
    
     <div 
         id="filtersContainer" 
-        class="rounded-t-3xl fixed bottom-0 left-0 w-full  h-[55vh] bg-card p-6 shadow-2xl z-50 transform translate-y-[100%] transition-transform duration-500 ease-in-out hidden overflow-y-auto"
+        class="rounded-t-3xl fixed bottom-0 left-0 w-full  h-[75vh] bg-card p-6 shadow-2xl z-50 transform translate-y-[100%] transition-transform duration-500 ease-in-out hidden overflow-y-auto"
     >
         <div id="dragHandle" class="w-20 h-2 bg-gray-200 rounded-full mx-auto mb-4"></div>
         <div class="flex justify-between items-center my-6">
