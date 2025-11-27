@@ -50,4 +50,20 @@ class Bouteille extends Model
     {
         return $this->belongsTo(Cellier::class, 'cellier_id');
     }
+
+    /**
+     * Récupère l'image de la bouteille depuis le catalogue SAQ si elle existe.
+     * 
+     * @return string|null URL de l'image ou null si non trouvée
+     */
+    public function getImageFromCatalogue(): ?string
+    {
+        if (!$this->code_saq) {
+            return null;
+        }
+
+        $bouteilleCatalogue = BouteilleCatalogue::where('code_saQ', $this->code_saq)->first();
+        
+        return $bouteilleCatalogue?->image;
+    }
 }

@@ -117,24 +117,7 @@
         @endif
 
         {{-- Actions --}}
-        <div class="flex gap-2 {{ $isCellierMode ? 'mt-auto stop-link-propagation' : 'flex-row-reverse flex-wrap justify-end' }}">
-            {{-- Bouton Consulter --}}
-            @if($isCatalogueMode)
-                <a 
-                    href="{{ route('catalogue.show', $id) }}"
-                    class="inline-flex items-center justify-center px-3 py-1.5 rounded-md bg-primary text-white text-sm hover:bg-primary-hover transition-colors duration-200 stop-link-propagation"
-                >
-                    Consulter
-                </a>
-            @elseif($isCellierMode)
-                <a 
-                    href="{{ route('bouteilles.show', [$cellierId, $bouteilleId]) }}"
-                    class="inline-flex items-center justify-center px-3 py-1.5 rounded-md bg-primary text-white text-sm hover:bg-primary-hover transition-colors duration-200 stop-link-propagation"
-                >
-                    Consulter
-                </a>
-            @endif
-
+        <div class="flex gap-2 {{ $isCellierMode ? 'mt-auto' : 'flex-row-reverse flex-wrap justify-end' }}">
             @if($isCatalogueMode)
                 {{-- Formulaire d'ajout au cellier --}}
                 <form class="flex gap-3 flex-row-reverse flex-wrap justify-end add-to-cellar-form w-full">
