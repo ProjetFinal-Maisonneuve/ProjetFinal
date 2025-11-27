@@ -12,9 +12,9 @@
             @if ($amount == 0)
                 <p class="text-gray-400 italic">Aucune bouteille</p>
             @elseif ($amount == 1)
-                <p class="text-gray-600">1 Bouteille</p>
+                <p class="text-gray-600">1 Bouteille unique</p>
             @else
-                <p class="text-gray-600">{{ $amount }} Bouteilles</p>
+                <p class="text-gray-600">{{ $amount }} Bouteilles uniques</p>
             @endif
         </div>
 
