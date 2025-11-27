@@ -1,6 +1,6 @@
 @props(['addCellarBtn' => false, 'addWineBtn' => false])
 {{-- Barre de navigation principale --}}
-<section class="w-full fixed bottom-0 left-0 flex flex-col gap-4 items-center">
+<section class="w-full fixed bottom-0 left-0 flex flex-col gap-4 items-center z-10">
    {{-- Permet l'affichage du bouton Ajouter un cellier --}}
    @if ($addCellarBtn == true)
       <div class="w-full max-w-md px-4 pointer-events-auto">
