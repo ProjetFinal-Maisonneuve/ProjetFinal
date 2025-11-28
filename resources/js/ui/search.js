@@ -1,22 +1,23 @@
-// Recuperation des éléments du DOM
-const searchInput = document.getElementById("searchInput");
-const paysFilter = document.getElementById("paysFilter");
-const typeFilter = document.getElementById("typeFilter");
-const millesimeFilter = document.getElementById("millesimeFilter");
-const container = document.getElementById("catalogueContainer");
-const priceMinFilter = document.getElementById("priceMin");
-const priceMaxFilter = document.getElementById("priceMax");
-const sortFilter = document.getElementById("sortFilter");
-const resetFiltersBtn = document.getElementById("resetFiltersBtn");
+// Récupération des éléments du DOM 
+const searchInput       = document.getElementById("searchInput");
+const paysFilter        = document.getElementById("paysFilter");
+const typeFilter        = document.getElementById("typeFilter");
+const millesimeFilter   = document.getElementById("millesimeFilter");
+const container         = document.getElementById("catalogueContainer");
+const priceMinFilter    = document.getElementById("priceMin");
+const priceMaxFilter    = document.getElementById("priceMax");
+const sortFilter        = document.getElementById("sortFilter");
+const resetFiltersBtn   = document.getElementById("resetFiltersBtn");
+const applyFiltersBtn   = document.getElementById("applyFiltersBtn");
 
-// Tooggle des options de tri
-const sortOptionsBtn = document.getElementById("sortOptionsBtn");
-const filtersContainer = document.getElementById("filtersContainer");
-const filtersOverlay = document.getElementById("filtersOverlay");
-const dragHandle = document.getElementById("dragHandle");
+// Toggle des options de tri / filtres
+const sortOptionsBtn    = document.getElementById("sortOptionsBtn");
+const filtersContainer  = document.getElementById("filtersContainer");
+const filtersOverlay    = document.getElementById("filtersOverlay");
+const dragHandle        = document.getElementById("dragHandle");
 
-const suggestionsBox = document.getElementById("suggestionsBox");
-let suggestionTimeout = null;
+const suggestionsBox    = document.getElementById("suggestionsBox");
+let suggestionTimeout   = null;
 
 // Fonction de reset des filtres
 function resetFilters() {
@@ -28,26 +29,28 @@ function resetFilters() {
         !priceMaxFilter ||
         !sortFilter ||
         !searchInput
-    )
+    ) {
         return;
+    }
 
-    paysFilter.value = "";
-    typeFilter.value = "";
+    paysFilter.value      = "";
+    typeFilter.value      = "";
     millesimeFilter.value = "";
-    priceMinFilter.value = "";
-    priceMaxFilter.value = "";
-    sortFilter.value = "";
-    searchInput.value = "";
+    priceMinFilter.value  = "";
+    priceMaxFilter.value  = "";
+    sortFilter.value      = "";
+    searchInput.value     = "";
+
+    // On relance le catalogue sans aucun filtre
     fetchCatalogue();
 }
 
-// Fonction de toggle des options de tri
+// Fonction de toggle des options de tri / filtres (bottom sheet)
 function toggleSortOptions() {
     if (!filtersContainer || !filtersOverlay) return;
 
     if (filtersContainer.classList.contains("hidden")) {
         filtersOverlay.classList.remove("hidden");
-
         filtersContainer.classList.remove("hidden");
 
         setTimeout(() => {
@@ -67,7 +70,7 @@ function toggleSortOptions() {
     }
 }
 
-// Evenements pour toggle les options de tri
+// Événements pour ouvrir / fermer le panneau
 if (sortOptionsBtn) {
     sortOptionsBtn.addEventListener("click", toggleSortOptions);
 }
@@ -78,7 +81,7 @@ if (dragHandle) {
     dragHandle.addEventListener("click", toggleSortOptions);
 }
 
-// Debouce, pour limiter la fréquence des appels AJAX lors de la saisie rapide. Ajoute un delais avant de fetch.
+// Debounce pour limiter la fréquence des appels AJAX lors de la saisie
 function debounce(fn, delay = 300) {
     let timer;
     return (...args) => {
@@ -91,17 +94,23 @@ function debounce(fn, delay = 300) {
 function fetchCatalogue(url = "/catalogue/search") {
     if (!container || !searchInput || !sortFilter) return;
 
-    // deconstruction des values du filtre sortBy
-    const [sortBy, sortDirection] = sortFilter.value.split("-");
+    let sortBy = "";
+    let sortDirection = "";
+
+    if (sortFilter.value) {
+        const parts = sortFilter.value.split("-");
+        sortBy = parts[0] || "";
+        sortDirection = parts[1] || "";
+    }
 
     const params = new URLSearchParams({
-        search: searchInput.value || "",
-        pays: paysFilter?.value || "",
-        type: typeFilter?.value || "",
-        millesime: millesimeFilter?.value || "",
-        prix_min: priceMinFilter?.value || "",
-        prix_max: priceMaxFilter?.value || "",
-        sort_by: sortBy,
+        search:       searchInput.value || "",
+        pays:         paysFilter?.value || "",
+        type:         typeFilter?.value || "",
+        millesime:    millesimeFilter?.value || "",
+        prix_min:     priceMinFilter?.value || "",
+        prix_max:     priceMaxFilter?.value || "",
+        sort_by:      sortBy,
         sort_direction: sortDirection,
     });
 
@@ -116,17 +125,20 @@ function fetchCatalogue(url = "/catalogue/search") {
         .then((data) => {
             if (container) {
                 container.innerHTML = data.html;
-                // Re-bind pagination links for AJAX
+                // Re-bind pagination links pour AJAX
                 bindPaginationLinks();
             }
+        })
+        .catch((err) => {
+            console.error("Erreur lors du fetch catalogue :", err);
         });
 }
 
-// Rendu des suggestions
+// Rendu des suggestions (auto-complétion)
 function renderSuggestions(items) {
     if (!suggestionsBox) return;
 
-    // Si pas de suggestions, cacher la boite
+    // Si pas de suggestions, cacher la boîte
     if (items.length === 0) {
         suggestionsBox.classList.add("hidden");
         return;
@@ -141,26 +153,24 @@ function renderSuggestions(items) {
                 ${item.nom}
             </div>`;
     });
-    // Afficher les suggestions
+
     suggestionsBox.innerHTML = html;
-    // Afficher la boîte de suggestions
     suggestionsBox.classList.remove("hidden");
 
     // Clic sur une suggestion
     document.querySelectorAll(".suggestion-item").forEach((el) => {
         el.addEventListener("click", () => {
-            // Mettre à jour l'input de recherche selon le clic
             searchInput.value = el.dataset.value;
             suggestionsBox.classList.add("hidden");
-            debouncedFetch(); // relance ton AJAX catalogue
+            debouncedFetch(); // relance le catalogue avec le texte choisi
         });
     });
 }
 
-// Debounced fetch pour le catalogue
+// Debounced fetch pour la recherche texte
 const debouncedFetch = debounce(fetchCatalogue, 300);
 
-// Recherche - seulement si les éléments existent
+// Recherche texte (input)
 if (searchInput) {
     searchInput.addEventListener("input", () => debouncedFetch());
 
@@ -174,10 +184,10 @@ if (searchInput) {
             }
             return;
         }
-        // Effacer le timeout précédent pour debounce des suggestions
+
         clearTimeout(suggestionTimeout);
 
-        // Anti spam
+        // Auto-complétion (suggestions)
         suggestionTimeout = setTimeout(() => {
             fetch(`/catalogue/suggest?search=${encodeURIComponent(query)}`)
                 .then((res) => res.json())
@@ -188,28 +198,23 @@ if (searchInput) {
     });
 }
 
-if (millesimeFilter) {
-    millesimeFilter.addEventListener("change", () => debouncedFetch());
-}
+// on enlève les fetch automatiques sur changement de filtres,
+// et on passe par le bouton "Appliquer les filtres"
 
-// Filtres
-if (paysFilter) {
-    paysFilter.addEventListener("change", () => debouncedFetch());
-}
-if (typeFilter) {
-    typeFilter.addEventListener("change", () => debouncedFetch());
-}
+// Filtres (on ne fait plus de fetch ici)
+// if (paysFilter)      paysFilter.addEventListener("change", () => debouncedFetch());
+// if (typeFilter)      typeFilter.addEventListener("change", () => debouncedFetch());
+// if (millesimeFilter) millesimeFilter.addEventListener("change", () => debouncedFetch());
+// if (priceMinFilter)  priceMinFilter.addEventListener("input", () => debouncedFetch());
+// if (priceMaxFilter)  priceMaxFilter.addEventListener("input", () => debouncedFetch());
+// if (sortFilter)      sortFilter.addEventListener("change", () => debouncedFetch());
 
-// Filtres de prix
-if (priceMinFilter) {
-    priceMinFilter.addEventListener("input", () => debouncedFetch());
-}
-if (priceMaxFilter) {
-    priceMaxFilter.addEventListener("input", () => debouncedFetch());
-}
-
-if (sortFilter) {
-    sortFilter.addEventListener("change", () => debouncedFetch());
+//  bouton "Appliquer les filtres"
+if (applyFiltersBtn) {
+    applyFiltersBtn.addEventListener("click", () => {
+        fetchCatalogue();     // on applique tous les filtres en même temps
+        toggleSortOptions();  // on ferme le panneau après application
+    });
 }
 
 // Reset des filtres
@@ -217,7 +222,7 @@ if (resetFiltersBtn) {
     resetFiltersBtn.addEventListener("click", resetFilters);
 }
 
-// Clic en dehors de la boite de suggestions pour la cacher
+// Clic en dehors de la boîte de suggestions pour la cacher
 if (searchInput && suggestionsBox) {
     document.addEventListener("click", (e) => {
         if (

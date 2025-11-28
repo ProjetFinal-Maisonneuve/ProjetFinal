@@ -1,4 +1,4 @@
-<?php  
+<?php
 
 namespace App\Http\Controllers;
 
@@ -9,6 +9,8 @@ use Illuminate\View\View;
 use Illuminate\Http\RedirectResponse;
 use App\Models\User;
 use App\Models\BouteilleCatalogue;
+use App\Models\Pays;
+use App\Models\TypeVin;
 use App\Models\Bouteille;
 
 /**
@@ -59,6 +61,15 @@ class CellierController extends Controller
         if ($request->filled('millesime')) {
             $query->where('millesime', 'like', '%' . $request->millesime . '%');
         }
+
+        if ($request->filled('prix_min')) {
+            $query->where('prix', '>=', $request->prix_min);
+        }
+
+        if ($request->filled('prix_max')) {
+            $query->where('prix', '<=', $request->prix_max);
+        }
+
 
         $sort = $request->query('sort', 'nom');
         $direction = $request->query('direction', 'asc');
@@ -141,63 +152,45 @@ class CellierController extends Controller
      * @param Cellier $cellier Le cellier à afficher
      * @return View La vue contenant les détails du cellier
      */
+
     public function show(Request $request, Cellier $cellier): View
     {
         $this->authorizeCellier($cellier);
 
-        $sort = $request->query('sort', 'nom');
-        $direction = $request->query('direction', 'asc');
-
-        // Validation du critère de tri (colonne)
-        if (!array_key_exists($sort, $this->allowedBottleSorts)) {
-            $sort = 'nom';
-        }
-
-        // Validation du sens de tri
-        $direction = strtolower($direction);
-        if (!in_array($direction, ['asc', 'desc'], true)) {
-            $direction = 'asc';
-        }
-
-        // Colonne SQL réelle
-        $sortColumn = $this->allowedBottleSorts[$sort];
-
-        // On part de la relation bouteilles du cellier
-        $query = $cellier->bouteilles();
-
-        if ($request->filled('nom')) {
-            $query->where('nom', 'like', '%' . $request->nom . '%');
-        }
-
-        if ($request->filled('type')) {
-            $query->where('type', 'like', '%' . $request->type . '%');
-        }
-
-        if ($request->filled('pays')) {
-            $query->where('pays', 'like', '%' . $request->pays . '%');
-        }
-
-        if ($request->filled('millesime')) {
-            $query->where('millesime', 'like', '%' . $request->millesime . '%');
-        }
-
-        // On applique le tri après les filtres
-        $bouteilles = $query
-            ->orderBy($sortColumn, $direction)
+        // Bouteilles du cellier
+        $bouteilles = $cellier->bouteilles()
+            ->orderBy('nom')
             ->get();
 
-        // On remplace la relation "bouteilles" du cellier
         $cellier->setRelation('bouteilles', $bouteilles);
 
-        // On envoie aussi les filtres + tri à la vue 
+        // liste complète des pays / types / millésimes
+        $pays = Pays::orderBy('nom')->get();
+
+        $types = TypeVin::orderBy('nom')->get();
+
+        $millesimes = BouteilleCatalogue::select('millesime')
+            ->whereNotNull('millesime')
+            ->distinct()
+            ->orderBy('millesime', 'desc')
+            ->get();
+
+        // titre sous le nom du cellier
+        $uniqueBottlesCount = $bouteilles->count();
+        if ($uniqueBottlesCount === 0) {
+            $undertitle = 'Aucune bouteille';
+        } elseif ($uniqueBottlesCount === 1) {
+            $undertitle = '1 bouteille unique';
+        } else {
+            $undertitle = $uniqueBottlesCount . ' bouteilles uniques';
+        }
+
         return view('celliers.show', [
-            'cellier'    => $cellier,
-            'sort'       => $sort,
-            'direction'  => $direction,
-            'nom'        => $request->nom,
-            'type'       => $request->type,
-            'pays'       => $request->pays,
-            'millesime'  => $request->millesime,
+            'cellier'     => $cellier,
+            'undertitle'  => $undertitle,
+            'pays'        => $pays,
+            'types'       => $types,
+            'millesimes'  => $millesimes,
         ]);
     }
 
@@ -311,16 +304,16 @@ class CellierController extends Controller
             abort(403, 'Impossible de modifier une bouteille provenant du catalogue SAQ.');
         }
 
-         $validated = $request->validate([
-        'nom'         => 'required|string|max:255',
-        'quantite'    => 'required|integer|min:0',
-        'format'      => 'nullable|string|max:25',
-        'pays'        => 'nullable|string|max:100',
-        'millesime'  => 'nullable|string|max:10',
-        'type'        => 'nullable|string|max:100',
-        'prix'        => 'nullable|numeric|min:0',
-        'commentaire' => 'nullable|string|max:1000',
-    ]);
+        $validated = $request->validate([
+            'nom'         => 'required|string|max:255',
+            'quantite'    => 'required|integer|min:0',
+            'format'      => 'nullable|string|max:25',
+            'pays'        => 'nullable|string|max:100',
+            'millesime'  => 'nullable|string|max:10',
+            'type'        => 'nullable|string|max:100',
+            'prix'        => 'nullable|numeric|min:0',
+            'commentaire' => 'nullable|string|max:1000',
+        ]);
 
         $bouteille->update($validated);
 

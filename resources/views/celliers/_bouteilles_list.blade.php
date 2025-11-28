@@ -9,7 +9,9 @@
     $hasFilters = request()->filled('nom')
         || request()->filled('pays')
         || request()->filled('type')
-        || request()->filled('millesime');
+        || request()->filled('millesime')
+        || request()->filled('prix_min')
+        || request()->filled('prix_max');
 @endphp
 
 <div class="bg-card border border-border-base rounded-xl shadow-md p-6 mt-4">
