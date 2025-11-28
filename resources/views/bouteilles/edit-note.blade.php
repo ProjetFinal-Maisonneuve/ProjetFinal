@@ -39,7 +39,7 @@
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
                     <p class="mt-1 text-xs text-text-muted">
-                        Cliquez sur les étoiles pour noter de 1 à 10
+                        Cliquez sur les étoiles pour noter de 1 à 5
                     </p>
                 </div>
 

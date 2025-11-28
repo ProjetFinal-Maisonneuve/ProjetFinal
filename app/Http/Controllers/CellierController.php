@@ -396,7 +396,7 @@ class CellierController extends Controller
 
         $validated = $request->validate([
             'note_degustation' => 'nullable|string|max:5000',
-            'rating'           => 'nullable|integer|min:0|max:10',
+            'rating'           => 'nullable|integer|min:0|max:5',
         ]);
 
         $bouteille->update([

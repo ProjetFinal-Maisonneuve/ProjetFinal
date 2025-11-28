@@ -1,5 +1,5 @@
 /**
- * Gestion du système de notation par étoiles (0-10)
+ * Gestion du système de notation par étoiles (0-5)
  * Permet d'afficher et de modifier interactivement la note d'une bouteille
  */
 
@@ -10,7 +10,7 @@ ratingContainers.forEach(container => {
     const isEditable = container.dataset.editable === 'true';
     const stars = container.querySelectorAll('.star-btn');
     const hiddenInput = container.querySelector('input[type="hidden"]');
-    const maxRating = parseInt(container.dataset.maxRating) || 10;
+    const maxRating = parseInt(container.dataset.maxRating) || 5;
     let currentRating = parseInt(container.dataset.rating) || 0;
     
     // Si ce n'est pas éditable, on ne fait rien
@@ -18,29 +18,62 @@ ratingContainers.forEach(container => {
         return;
     }
     
+    // Fonction pour mettre en surbrillance les étoiles
+    function highlightStars(starValue) {
+        stars.forEach((s, i) => {
+            if (i < starValue) {
+                s.classList.remove('text-gray-300');
+                s.classList.add('text-yellow-400');
+            } else {
+                s.classList.remove('text-yellow-400');
+                s.classList.add('text-gray-300');
+            }
+        });
+    }
+    
     stars.forEach((star, index) => {
         const starValue = index + 1;
         
-        // Survol de la souris (prévisualisation)
+        // Survol de la souris (prévisualisation) - Desktop seulement
         star.addEventListener('mouseenter', function() {
-            // Mettre en surbrillance toutes les étoiles jusqu'à celle survolée
-            stars.forEach((s, i) => {
-                if (i < starValue) {
-                    s.classList.remove('text-gray-300');
-                    s.classList.add('text-yellow-400');
-                } else {
-                    s.classList.remove('text-yellow-400');
-                    s.classList.add('text-gray-300');
-                }
-            });
+            highlightStars(starValue);
         });
         
-        // Sortie de la souris (retour à la valeur actuelle)
+        // Sortie de la souris (retour à la valeur actuelle) - Desktop seulement
         star.addEventListener('mouseleave', function() {
             updateStarDisplay(stars, currentRating);
         });
         
-        // Clic sur une étoile
+        // Touch events pour mobile
+        star.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            highlightStars(starValue);
+        });
+        
+        star.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Définir la note
+            currentRating = starValue;
+            container.dataset.rating = currentRating;
+            
+            // Mettre à jour l'affichage
+            updateStarDisplay(stars, currentRating);
+            
+            // Mettre à jour l'input caché
+            if (hiddenInput) {
+                hiddenInput.value = currentRating;
+            }
+            
+            // Mettre à jour le texte affiché
+            const ratingText = container.querySelector('span');
+            if (ratingText) {
+                ratingText.textContent = currentRating + '/5';
+            }
+        });
+        
+        // Clic sur une étoile (Desktop)
         star.addEventListener('click', function(e) {
             e.stopPropagation();
             e.preventDefault();
@@ -59,7 +92,7 @@ ratingContainers.forEach(container => {
             // Mettre à jour le texte affiché
             const ratingText = container.querySelector('span');
             if (ratingText) {
-                ratingText.textContent = currentRating + '/10';
+                ratingText.textContent = currentRating + '/5';
             }
         });
     });
@@ -68,7 +101,7 @@ ratingContainers.forEach(container => {
 /**
  * Met à jour l'affichage des étoiles selon la note
  * @param {NodeList} stars - Liste des boutons étoiles
- * @param {number} rating - Note actuelle (0-10)
+ * @param {number} rating - Note actuelle (0-5)
  */
 function updateStarDisplay(stars, rating) {
     stars.forEach((star, index) => {
