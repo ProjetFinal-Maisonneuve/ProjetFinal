@@ -3,7 +3,7 @@
 {{-- Élément de navigation --}}
 <a 
     href="{{ $url }}" 
-    class="group py-3 px-5 transition-colors duration-400 hover:bg-neutral-300 flex-1 flex justify-center active:bg-neutral-400"
+    class="group py-3 px-4 transition-colors duration-400 hover:bg-neutral-300 flex-1 flex justify-center active:bg-neutral-400"
     aria-current="{{ $active ? 'page' : 'false' }}"
 >
     <div class="flex flex-col items-center">

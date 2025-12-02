@@ -10,230 +10,182 @@
 @endphp
 
 @section('content')
-<div class="min-h-screen bg-background pt-24" role="main" aria-label="Détails de la bouteille">
-    <section class="p-4 sm:w-full max-w-4xl mx-auto">
-        <div class="bg-card border border-border-base rounded-xl shadow-md p-6">
-            
-            {{-- En-tête avec bouton retour --}}
-            <div class="flex items-center justify-between mb-6">
-                <x-page-header 
-                    title="Détails de la bouteille" 
-                    marginTop="m-0"
-                    :undertitle="$isCatalogue ? 'Informations complètes sur cette bouteille du catalogue' : 'Informations complètes sur cette bouteille'" 
-                />
-                <x-back-btn :route="$backRoute" />
-            </div>
+<div class="min-h-screen bg-gray-50/50 pt-24 pb-12" role="main" aria-label="Détails de la bouteille">
+    <section class="container max-w-5xl mx-auto px-4 sm:px-6">
+        
+        {{-- En-tête simplifié --}}
+        <div class="flex items-center justify-between mb-6">
+            <x-back-btn :route="$backRoute" :label="$backLabel" />
+        </div>
 
-            {{-- Contenu principal --}}
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {{-- Carte Principale --}}
+        <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="grid grid-cols-1 md:grid-cols-12">
                 
-                {{-- Image de la bouteille --}}
-                <div class="flex items-center justify-center bg-gray-50 rounded-lg p-8 min-h-[400px]" >
+               
+                <div class="md:col-span-4 bg-gray-50 flex items-center justify-center p-8 md:p-10 border-b md:border-b-0 md:border-r border-gray-100 relative">
+                    {{-- Badge Type --}}
+                    @if($donnees['type'])
+                        <span class="absolute top-4 left-4 bg-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider text-text-muted shadow-sm border border-gray-100">
+                            {{ $donnees['type'] }}
+                        </span>
+                    @endif
+
                     @if($donnees['image'])
                         @php
-                            // Normaliser le chemin de l'image
                             $imagePath = ltrim($donnees['image'], '/');
-                            // Si l'image commence déjà par http, c'est une URL complète
                             if (str_starts_with($imagePath, 'http')) {
                                 $imageUrl = $imagePath;
                             } else {
-                                // Sinon, utiliser asset() pour le chemin local
                                 while (str_starts_with($imagePath, 'storage/')) {
                                     $imagePath = substr($imagePath, 8);
                                 }
                                 $imageUrl = asset('storage/' . $imagePath);
                             }
                         @endphp
+                        
                         <img 
                             src="{{ $imageUrl }}" 
                             alt="Bouteille {{ $donnees['nom'] }}" 
-                            class="max-w-full max-h-[400px] object-contain"
+                            class="w-auto h-64 md:h-80 object-contain drop-shadow-lg transition-transform duration-500 hover:scale-105"
                         >
                     @else
-                        <div class="text-center text-text-muted" role="status">
-                            <svg  version="1.0" xmlns="http://www.w3.org/2000/svg"  width="300.000000pt" height="300.000000pt" viewBox="0 0 300.000000 300.000000"  preserveAspectRatio="xMidYMid meet">  <g transform="translate(0.000000,300.000000) scale(0.050000,-0.050000)" fill="#757575" stroke="none"> <path d="M2771 5765 c-8 -19 -13 -325 -12 -680 3 -785 6 -767 -189 -955 -231 -222 -214 -70 -225 -2018 -10 -1815 -11 -1791 100 -1831 215 -77 1028 -70 1116 10 73 66 77 168 80 1839 4 1928 18 1815 -254 2058 -141 126 -147 164 -147 878 0 321 -6 618 -13 659 l-12 75 -215 0 c-187 0 -218 -5 -229 -35z"/> </g> </svg> 
+                        <div class="text-center opacity-20" role="status">
+                            <svg version="1.0" xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 300 300">
+                                <g transform="translate(0,300) scale(0.05,-0.05)" fill="currentColor" stroke="none"> 
+                                    <path d="M2771 5765 c-8 -19 -13 -325 -12 -680 3 -785 6 -767 -189 -955 -231 -222 -214 -70 -225 -2018 -10 -1815 -11 -1791 100 -1831 215 -77 1028 -70 1116 10 73 66 77 168 80 1839 4 1928 18 1815 -254 2058 -141 126 -147 164 -147 878 0 321 -6 618 -13 659 l-12 75 -215 0 c-187 0 -218 -5 -229 -35z"/> 
+                                </g> 
+                            </svg> 
                         </div>
                     @endif
                 </div>
 
-                {{-- Informations de la bouteille --}}
-                <div class="space-y-6">
+               
+                <div class="md:col-span-8 p-6 md:p-8 flex flex-col h-full">
                     
-                    {{-- Nom --}}
-                    <div>
-                        <h2 class="text-3xl font-bold text-text-heading mb-2">
-                            {{ $donnees['nom'] }}
-                        </h2>
-                    </div>
-
-                    {{-- Informations détaillées --}}
-                    <div class="space-y-4">
-                        
-                        {{-- Type --}}
-                        @if($donnees['type'])
-                            <div class="border-b border-border-base pb-3">
-                                <span class="text-sm font-medium text-text-muted uppercase tracking-wide">Type</span>
-                                <p class="text-lg text-text-body mt-1">{{ $donnees['type'] }}</p>
+                    {{-- 1. Header: Nom & Prix --}}
+                    <div class="flex flex-wrap justify-between items-start gap-4 mb-6 border-b border-gray-100 pb-6">
+                        <div class="flex-1">
+                            <h1 class="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
+                                {{ $donnees['nom'] }}
+                            </h1>
+                            <div class="flex items-center flex-wrap gap-2 mt-2 text-sm text-gray-500">
+                                @if($donnees['pays'])
+                                    <span>{{ $donnees['pays'] }}</span>
+                                @endif
+                                @if(isset($donnees['region']) && $donnees['region'])
+                                    <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
+                                    <span>{{ $donnees['region'] }}</span>
+                                @endif
                             </div>
-                        @endif
+                        </div>
 
-                        {{-- Pays --}}
-                        @if($donnees['pays'])
-                            <div class="border-b border-border-base pb-3">
-                                <span class="text-sm font-medium text-text-muted uppercase tracking-wide">Pays</span>
-                                <p class="text-lg text-text-body mt-1">{{ $donnees['pays'] }}</p>
-                            </div>
-                        @endif
-
-                        {{-- Région --}}
-                        @if(isset($donnees['region']) && $donnees['region'])
-                            <div class="border-b border-border-base pb-3">
-                                <span class="text-sm font-medium text-text-muted uppercase tracking-wide">Région</span>
-                                <p class="text-lg text-text-body mt-1">{{ $donnees['region'] }}</p>
-                            </div>
-                        @endif
-
-                        {{-- Millésime --}}
-                        @if($donnees['millesime'])
-                            <div class="border-b border-border-base pb-3">
-                                <span class="text-sm font-medium text-text-muted uppercase tracking-wide">Millésime</span>
-                                <p class="text-lg text-text-body mt-1 font-semibold">{{ $donnees['millesime'] }}</p>
-                            </div>
-                        @endif
-
-                        {{-- Format/Volume --}}
-                        @if($donnees['format'])
-                            <div class="border-b border-border-base pb-3">
-                                <span class="text-sm font-medium text-text-muted uppercase tracking-wide">{{ $isCatalogue ? 'Volume' : 'Format' }}</span>
-                                <p class="text-lg text-text-body mt-1">{{ $donnees['format'] }}</p>
-                            </div>
-                        @endif
-
-                        {{-- Prix --}}
                         @if($donnees['prix'])
-                            <div class="border-b border-border-base pb-3">
-                                <span class="text-sm font-medium text-text-muted uppercase tracking-wide">Prix</span>
-                                <p class="text-lg text-text-body mt-1 font-semibold" aria-label="{{ number_format($donnees['prix'], 2, ',', ' ') }} dollars">
+                            <div class="text-right">
+                                <p class="text-2xl font-bold text-primary">
                                     {{ number_format($donnees['prix'], 2, ',', ' ') }} $
                                 </p>
                             </div>
                         @endif
-
-                        {{-- Code SAQ (seulement pour le catalogue) --}}
-                        @if($isCatalogue && isset($donnees['code_saq']) && $donnees['code_saq'])
-                            <div class="border-b border-border-base pb-3">
-                                <span class="text-sm font-medium text-text-muted uppercase tracking-wide">Code SAQ</span>
-                                <p class="text-lg text-text-body mt-1">{{ $donnees['code_saq'] }}</p>
-                            </div>
-                        @endif
-
-                        {{-- Quantité (seulement pour les bouteilles du cellier) --}}
-                        @if(!$isCatalogue && isset($donnees['quantite']))
-                            <div class="border-b border-border-base pb-3">
-                                <span class="text-sm font-medium text-text-muted uppercase tracking-wide">Quantité</span>
-                                <p class="text-lg text-text-body mt-1 font-semibold">
-                                    {{ $donnees['quantite'] }} {{ $donnees['quantite'] > 1 ? 'bouteilles' : 'bouteille' }}
-                                </p>
-                            </div>
-                        @endif
-
-                        {{-- Date d'ajout (seulement pour les bouteilles du cellier) --}}
-                        @if(!$isCatalogue && isset($donnees['date_ajout']) && $donnees['date_ajout'])
-                            <div class="border-b border-border-base pb-3">
-                                <span class="text-sm font-medium text-text-muted uppercase tracking-wide">Date d'ajout</span>
-                                <p class="text-lg text-text-body mt-1">
-                                    {{ $donnees['date_ajout']->format('d/m/Y') }}
-                                </p>
-                            </div>
-                        @endif
-
                     </div>
 
-                    {{-- Section notation et notes de dégustation (seulement pour les bouteilles du cellier) --}}
-                    @if(!$isCatalogue)
-                        <div class="mt-8 pt-6 border-t border-border-base">
-                            <div class="flex items-center justify-between mb-4">
-                                <h3 class="text-xl font-semibold text-text-heading">Évaluation</h3>
-                                <a 
-                                    href="{{ route('bouteilles.note.edit', [$cellier, $bouteille]) }}"
-                                    class="text-sm text-primary hover:underline"
-                                    aria-label="{{ (isset($donnees['note_degustation']) && $donnees['note_degustation']) || (isset($donnees['rating']) && $donnees['rating']) ? 'Modifier votre évaluation' : 'Ajouter une évaluation' }}"
-                                >
-                                    {{ (isset($donnees['note_degustation']) && $donnees['note_degustation']) || (isset($donnees['rating']) && $donnees['rating']) ? 'Modifier' : 'Ajouter' }}
-                                </a>
+                    {{-- 2. Grid de Détails --}}
+                    <div class="grid grid-cols-2 gap-y-6 gap-x-4 mb-8">
+                        
+                        @if($donnees['millesime'])
+                            <div>
+                                <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Millésime</span>
+                                <span class="text-gray-900 font-medium">{{ $donnees['millesime'] }}</span>
                             </div>
-                            
-                            {{-- Affichage de la notation par étoiles --}}
-                            <div class="mb-4">
-                                <span class="text-sm font-medium text-text-muted mb-2 block">Note</span>
-                                <x-star-rating 
-                                    :rating="$donnees['rating'] ?? null" 
-                                    :editable="false"
-                                />
-                            </div>
-                            
-                            {{-- Affichage des notes de dégustation --}}
-                            <div class="mt-4">
-                                <span class="text-sm font-medium text-text-muted mb-2 block">Notes de dégustation</span>
-                                @if(isset($donnees['note_degustation']) && $donnees['note_degustation'])
-                                    <div class="bg-gray-50 rounded-lg p-4 border border-border-base">
-                                        <p class="text-text-body whitespace-pre-wrap">{{ $donnees['note_degustation'] }}</p>
-                                    </div>
-                                @else
-                                    <div class="bg-gray-50 rounded-lg p-4 border border-border-base text-center">
-                                        <p class="text-text-muted italic">Aucune note de dégustation pour le moment.</p>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-                    @endif
+                        @endif
 
-                    {{-- Formulaire d'ajout au cellier (seulement pour les bouteilles du catalogue) --}}
-                    @if($isCatalogue)
-                        <div class="mt-6 pt-6 border-t border-border-base">
-                            <form class="flex gap-3 flex-row flex-wrap items-end add-to-cellar-form" aria-label="Ajouter au cellier">
-                                <input 
-                                    type="hidden" 
-                                    name="bottle_id" 
-                                    value="{{ $bouteilleCatalogue->id }}"
-                                >
+                        @if($donnees['format'])
+                            <div>
+                                <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">{{ $isCatalogue ? 'Volume' : 'Format' }}</span>
+                                <span class="text-gray-900 font-medium">{{ $donnees['format'] }}</span>
+                            </div>
+                        @endif
 
-                                <div class=" min-w-[120px]">
-                                    <label class="block text-sm font-medium text-text-muted mb-2">
-                                        Quantité
-                                    </label>
-                                    <input 
-                                        type="number"
-                                        name="quantity"
-                                        min="1"
-                                        max="10"
-                                        value="1"
-                                        class="w-20 text-center border border-border-base rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
-                                        aria-label="Quantité à ajouter"
-                                    />
+                        @if($isCatalogue && isset($donnees['code_saq']) && $donnees['code_saq'])
+                            <div>
+                                <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Code SAQ</span>
+                                <span class="font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded text-sm inline-block">{{ $donnees['code_saq'] }}</span>
+                            </div>
+                        @endif
+
+                        @if(!$isCatalogue && isset($donnees['quantite']))
+                            <div>
+                                <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">En stock</span>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium {{ $donnees['quantite'] > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                    {{ $donnees['quantite'] }} {{ $donnees['quantite'] > 1 ? 'bouteilles' : 'bouteille' }}
+                                </span>
+                            </div>
+                        @endif
+
+                        @if(!$isCatalogue && isset($donnees['date_ajout']) && $donnees['date_ajout'])
+                            <div class="col-span-2">
+                                <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Ajouté le</span>
+                                <span class="text-gray-700">{{ $donnees['date_ajout']->format('d F Y') }}</span>
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- 3. Zone d'Actions --}}
+                    <div class="mt-auto pt-6 border-t border-gray-100">
+                        
+                        {{-- Catalogue (Ajout) --}}
+                        @if($isCatalogue)
+                            <form class="flex flex-col sm:flex-row gap-4 items-end sm:items-stretch" aria-label="Ajouter au cellier">
+                                <input type="hidden" name="bottle_id" value="{{ $bouteilleCatalogue->id }}">
+                                
+                                <div class="w-full sm:w-32">
+                                    <label class="block text-xs font-semibold text-gray-500 mb-1.5 ml-1">Quantité</label>
+                                    <div class="relative">
+                                        <input 
+                                            type="number" 
+                                            name="quantity" 
+                                            min="1" max="10" value="1"
+                                            class="block w-full text-center rounded-lg border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm py-2.5"
+                                        >
+                                    </div>
                                 </div>
 
-                                <button 
-                                    type="submit"
-                                    class="add-to-cellar-btn flex-1 bg-button-default border-2 border-primary text-primary font-bold py-2 px-4 rounded-lg hover:bg-button-hover hover:text-white active:bg-primary-active transition-colors duration-300 block text-center"
-                                    data-bottle-id="{{ $bouteilleCatalogue->id }}"
-                                >
+                                <button type="submit" data-bottle-id="{{ $bouteilleCatalogue->id }}" class="add-to-cellar-btn w-full sm:flex-1 bg-gray-900 hover:bg-black text-white font-medium py-2.5 px-4 rounded-lg shadow-sm transition-all duration-200 flex items-center justify-center gap-2">
+                                    <x-dynamic-component :component="'lucide-plus'" class="w-4 h-4"/>
                                     Ajouter au cellier
                                 </button>
                             </form>
-                        </div>
-                    @endif
-
-                    {{-- Actions --}}
-                    <div class="flex gap-3 mt-6 pt-6 border-t border-border-base">
-                        <x-back-btn :route="$backRoute" :label="$backLabel" />
                         
-                        {{-- Bouton modifier (seulement pour les bouteilles du cellier ajoutées manuellement, sans code SAQ) --}}
-                        @if(!$isCatalogue && empty($bouteille->code_saq))
-                            <x-edit-btn
-                                :route="route('bouteilles.edit', [$cellier, $bouteille])"
-                                label="Modifier"
-                            />
+                        {{-- Cellier (Notes & Modif) --}}
+                        @else
+                            <div class="space-y-6">
+                                {{-- Note et Avis --}}
+                                <div class="bg-gray-50 rounded-xl p-5 border border-gray-100">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <h3 class="font-semibold text-gray-900">Notes de dégustation</h3>
+                                        <a href="{{ route('bouteilles.note.edit', [$cellier, $bouteille]) }}" class="text-xs font-medium text-primary hover:text-primary-dark hover:underline transition-colors">
+                                            {{ (isset($donnees['note_degustation']) || isset($donnees['rating'])) ? 'Modifier' : 'Rédiger un avis' }}
+                                        </a>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <x-star-rating :rating="$donnees['rating'] ?? null" :editable="false" />
+                                    </div>
+
+                                    @if(isset($donnees['note_degustation']) && $donnees['note_degustation'])
+                                        <p class="text-sm text-gray-600 italic leading-relaxed">"{{ $donnees['note_degustation'] }}"</p>
+                                    @else
+                                        <p class="text-sm text-gray-400 italic">Aucune note écrite pour le moment.</p>
+                                    @endif
+                                </div>
+
+                                {{-- Bouton Modifier Bouteille --}}
+                                @if(empty($bouteille->code_saq))
+                                    <div class="flex justify-end">
+                                        <x-edit-btn :route="route('bouteilles.edit', [$cellier, $bouteille])" label="Modifier la fiche" />
+                                    </div>
+                                @endif
+                            </div>
                         @endif
                     </div>
 

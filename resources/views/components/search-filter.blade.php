@@ -147,7 +147,7 @@
                 <button
                     id="resetFiltersBtn"
                     type="button"
-                    class="flex-1 px-4 py-2 bg-card border border-danger text-danger rounded-lg hover:bg-danger-hover hover:text-white transition"
+                    class="flex-1 px-4 py-2 bg-danger text-white rounded-lg hover:bg-danger-hover hover:text-white transition"
                     aria-label="Réinitialiser tous les filtres"
                 >
                     Réinitialiser
@@ -156,7 +156,7 @@
                 <button
                     id="applyFiltersBtn"
                     type="button"
-                    class="flex-1 px-4 py-2 bg-button-default text-white rounded-lg hover:bg-button-hover transition"
+                    class="flex-1 px-4 py-2 bg-button-default border-2 text-primary border-primary rounded-lg hover:bg-button-hover hover:text-white transition"
                 >
                     Filtrer
                 </button>
