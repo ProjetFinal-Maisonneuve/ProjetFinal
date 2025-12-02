@@ -7,6 +7,7 @@ use App\Http\Controllers\AccueilController;
 use App\Http\Controllers\CatalogueController;
 use App\Http\Controllers\BouteilleManuelleController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ListeAchatController;
 use App\Http\Controllers\AdminController;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
@@ -114,13 +115,25 @@ Route::middleware('auth')->group(function () {
         '/celliers/{cellier}/bouteilles/{bouteille}/note',
         [CellierController::class, 'updateNote']
     )->name('bouteilles.note.update');
-});
 
-// PROFIL (toujours protégé par auth)
-Route::middleware('auth')->group(function () {
+    // PROFIL
     Route::get('/profil', [ProfileController::class, 'index'])->name('profile.index');
     Route::post('/profil/update-info', [ProfileController::class, 'updateInfo'])->name('profile.updateInfo');
     Route::post('/profil/update-password', [ProfileController::class, 'updatePassword'])->name('profile.updatePassword');
+
+    // LISTE D'ACHAT
+    // Voir la liste d'achat
+    Route::get('/liste-achat', [ListeAchatController::class, 'index'])
+        ->name('listeAchat.index');
+
+    Route::post('/liste-achat', [ListeAchatController::class, 'store'])
+        ->name('listeAchat.store');
+
+    Route::put('/liste-achat/{item}', [ListeAchatController::class, 'update'])
+        ->name('listeAchat.update');
+
+    Route::delete('/liste-achat/{item}', [ListeAchatController::class, 'destroy'])
+        ->name('listeAchat.destroy');
 });
 
 // Routes d'administration (réservées aux admins)

@@ -72,6 +72,8 @@ class User extends Authenticatable
         return $this->hasMany(ListeAchat::class, 'user_id', 'id');
     }
 
+    
+
 
     /**
      * Vérifier le rôle admin.
