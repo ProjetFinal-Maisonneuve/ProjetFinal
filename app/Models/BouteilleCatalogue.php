@@ -22,6 +22,7 @@ class BouteilleCatalogue extends Model
         'millesime',
         'prix',
         'url_image',
+        'url_saq',
         'volume',
         'date_import',
     ];

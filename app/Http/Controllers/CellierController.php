@@ -366,9 +366,20 @@ class CellierController extends Controller
             abort(403);
         }
 
-        $bouteilleCatalogue = BouteilleCatalogue::where('nom', $bouteille->nom)
-            ->with(['typeVin', 'pays', 'region'])
-            ->first();
+        // Chercher d'abord par code_saq si disponible, sinon par nom
+        $bouteilleCatalogue = null;
+        if ($bouteille->code_saq) {
+            $bouteilleCatalogue = BouteilleCatalogue::where('code_saQ', $bouteille->code_saq)
+                ->with(['typeVin', 'pays', 'region'])
+                ->first();
+        }
+        
+        // Si pas trouvé par code_saq, chercher par nom
+        if (!$bouteilleCatalogue) {
+            $bouteilleCatalogue = BouteilleCatalogue::where('nom', $bouteille->nom)
+                ->with(['typeVin', 'pays', 'region'])
+                ->first();
+        }
 
         $donnees = [
             'nom'              => $bouteille->nom,
@@ -388,6 +399,7 @@ class CellierController extends Controller
             $donnees['type']      = $bouteilleCatalogue->typeVin ? $bouteilleCatalogue->typeVin->nom : null;
             $donnees['millesime'] = $bouteilleCatalogue->millesime;
             $donnees['image']     = $bouteilleCatalogue->image;
+            $donnees['url_saq']   = $bouteilleCatalogue->url_saq;
 
             if (!$donnees['pays'] && $bouteilleCatalogue->pays) {
                 $donnees['pays'] = $bouteilleCatalogue->pays->nom;

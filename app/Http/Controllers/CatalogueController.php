@@ -104,6 +104,7 @@ class CatalogueController extends Controller
             'image' => $bouteilleCatalogue->image,
             'region' => $bouteilleCatalogue->region ? $bouteilleCatalogue->region->nom : null,
             'code_saq' => $bouteilleCatalogue->code_saQ,
+            'url_saq' => $bouteilleCatalogue->url_saq,
         ];
 
         return view('bouteilles.details', [

@@ -357,6 +357,25 @@ GRAPHQL;
 
         $nom = $produit['name'] ?? $productView['name'] ?? 'Produit sans nom';
         
+        // Récupérer l'URL canonique (lien SAQ.com)
+        $urlSaq = null;
+        if (isset($produit['canonical_url'])) {
+            $urlSaq = $produit['canonical_url'];
+            // Nettoyer l'URL si elle contient déjà le domaine en double
+            $urlSaq = preg_replace('#https?://www\.saq\.com/www\.saq\.com/#', 'https://www.saq.com/', $urlSaq);
+            // S'assurer que l'URL est complète (ajouter le domaine si nécessaire)
+            if (!preg_match('/^https?:\/\//', $urlSaq)) {
+                // Si l'URL commence par /www.saq.com/, enlever ce préfixe
+                if (strpos($urlSaq, '/www.saq.com/') === 0) {
+                    $urlSaq = substr($urlSaq, strlen('/www.saq.com'));
+                }
+                $urlSaq = $this->baseUrl . '/' . ltrim($urlSaq, '/');
+            }
+        } elseif (isset($productView['urlKey'])) {
+            // Construire l'URL à partir de l'urlKey si canonical_url n'est pas disponible
+            $urlSaq = $this->baseUrl . '/' . $productView['urlKey'] . '.html';
+        }
+        
         $prix = 0;
         if (isset($produit['price_range']['minimum_price']['regular_price']['value'])) {
             $prix = (float) $produit['price_range']['minimum_price']['regular_price']['value'];
@@ -413,10 +432,19 @@ GRAPHQL;
                 $identite = strtolower($attributes['identite_produit']);
                 if (strpos($identite, 'champagne') !== false) {
                     $typeVin = 'Champagne';
-                } elseif (strpos($identite, 'spiritueux') !== false) {
-                    $typeVin = 'Spiritueux';
                 }
+                // FILTRE : On exclut les spiritueux et autres produits non-vins
+                // elseif (strpos($identite, 'spiritueux') !== false) {
+                //     $typeVin = 'Spiritueux';
+                // }
             }
+        }
+        
+        // FILTRE : Ne garder que les vins (Rouge, Blanc, Rosé) et les champagnes
+        // Exclure les spiritueux, bières, et autres produits
+        if (!$typeVin || $typeVin === 'Spiritueux') {
+            // Si on n'a pas trouvé de type de vin ou si c'est un spiritueux, on ignore ce produit
+            return null;
         }
 
         $cheminImage = null;
@@ -433,6 +461,7 @@ GRAPHQL;
             // Stocker le chemin relatif sans /storage/ au début (ex: 'products/produit_xxx.jpg')
             // Le composant utilisera asset('storage/' . $urlImage) pour générer l'URL complète
             'url_image' => $cheminImage ?: ($urlImage ?: null),
+            'url_saq' => $urlSaq,
             'volume' => $volume,
             'millesime' => $millesime,
             'region_nom' => $region,
@@ -606,6 +635,7 @@ GRAPHQL;
                 'nom' => $donneesProduit['nom'],
                 'prix' => $donneesProduit['prix'],
                 'url_image' => $donneesProduit['url_image'],
+                'url_saq' => $donneesProduit['url_saq'] ?? null,
                 'volume' => $donneesProduit['volume'],
                 'millesime' => $donneesProduit['millesime'],
                 'id_region' => $region ? $region->id : null,
@@ -626,5 +656,89 @@ GRAPHQL;
         }
 
         $this->derniereRequete = time();
+    }
+
+    /**
+     * Récupère uniquement l'URL SAQ pour un code SAQ spécifique.
+     * Méthode optimisée pour mettre à jour uniquement les URLs sans réimporter toutes les données.
+     *
+     * @param string $codeSaq Le code SAQ du produit
+     * @return string|null L'URL SAQ complète ou null si non trouvée
+     */
+    public function obtenirUrlSaqParCode($codeSaq, $skipDelay = false)
+    {
+        try {
+            // Rechercher le produit par son code SAQ
+            $query = $this->construireQueryProduits();
+            
+            $variables = [
+                'phrase' => $codeSaq, // Recherche par code SAQ
+                'pageSize' => 24,
+                'currentPage' => 1,
+                'filter' => [
+                    [
+                        'attribute' => 'categoryPath',
+                        'eq' => 'produits'
+                    ],
+                    [
+                        'attribute' => 'availability_front',
+                        'in' => [
+                            'En ligne',
+                            'En succursale',
+                            'Disponible bientôt',
+                            'Bientôt en loterie',
+                            'En loterie'
+                        ]
+                    ]
+                ],
+                'sort' => [],
+                'context' => [
+                    'customerGroup' => 'b6589fc6ab0dc82cf12099d1c2d40ab994e8410c',
+                    'userViewHistory' => []
+                ]
+            ];
+
+            // Si skipDelay est true, on fait la requête sans délai (pour optimisation)
+            if ($skipDelay) {
+                $this->attendreDelai(); // On respecte quand même un délai minimal
+            }
+            
+            $response = $this->faireRequeteGraphQL($query, $variables);
+            $data = json_decode($response, true);
+
+            if (isset($data['data']['productSearch']['items'])) {
+                foreach ($data['data']['productSearch']['items'] as $item) {
+                    $produit = $item['product'] ?? [];
+                    $productView = $item['productView'] ?? [];
+                    
+                    $itemCodeSaq = $produit['sku'] ?? $productView['sku'] ?? null;
+                    
+                    if ($itemCodeSaq === $codeSaq) {
+                        // Trouvé ! Récupérer l'URL
+                        $urlSaq = null;
+                        if (isset($produit['canonical_url'])) {
+                            $urlSaq = $produit['canonical_url'];
+                            // Nettoyer l'URL si elle contient déjà le domaine en double
+                            $urlSaq = preg_replace('#https?://www\.saq\.com/www\.saq\.com/#', 'https://www.saq.com/', $urlSaq);
+                            if (!preg_match('/^https?:\/\//', $urlSaq)) {
+                                // Si l'URL commence par /www.saq.com/, enlever ce préfixe
+                                if (strpos($urlSaq, '/www.saq.com/') === 0) {
+                                    $urlSaq = substr($urlSaq, strlen('/www.saq.com'));
+                                }
+                                $urlSaq = $this->baseUrl . '/' . ltrim($urlSaq, '/');
+                            }
+                        } elseif (isset($productView['urlKey'])) {
+                            $urlSaq = $this->baseUrl . '/' . $productView['urlKey'] . '.html';
+                        }
+                        return $urlSaq;
+                    }
+                }
+            }
+            
+            return null;
+        } catch (\Exception $e) {
+            Log::error("Erreur lors de la récupération de l'URL SAQ pour {$codeSaq}: " . $e->getMessage());
+            return null;
+        }
     }
 }
