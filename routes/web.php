@@ -9,6 +9,7 @@ use App\Http\Controllers\BouteilleManuelleController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ListeAchatController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\PartageController;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 
@@ -134,7 +135,18 @@ Route::middleware('auth')->group(function () {
 
     Route::delete('/liste-achat/{item}', [ListeAchatController::class, 'destroy'])
         ->name('listeAchat.destroy');
+
+    // PARTAGE
+    // Générer un lien de partage unique pour une bouteille
+    // Retourne un JSON avec l'URL de partage et le token
+    Route::post('/api/partage/{bouteille}', [PartageController::class, 'store'])
+        ->name('partage.store');
 });
+
+// Routes publiques pour le partage (accessibles sans authentification)
+// Affiche la vue publique d'une bouteille partagée via son token unique
+Route::get('/partage/{token}', [PartageController::class, 'show'])
+    ->name('partage.show');
 
 // Routes d'administration (réservées aux admins)
 Route::middleware(['auth', 'is_admin'])
