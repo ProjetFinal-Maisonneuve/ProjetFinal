@@ -15,7 +15,9 @@ class AdminController extends Controller
     {
         $search = $request->input('q'); 
 
-        $query = User::query()->orderBy('created_at', 'desc');
+        $query = User::query()
+            ->withCount('celliers')   // 👈 nombre de celliers par usager
+            ->orderBy('created_at', 'desc');
 
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
@@ -24,7 +26,7 @@ class AdminController extends Controller
             });
         }
 
-        $users = $query->paginate(15)->withQueryString();
+        $users = $query->paginate(10)->withQueryString();
 
         return view('admin.users.index', [
             'users'  => $users,
@@ -33,11 +35,13 @@ class AdminController extends Controller
     }
 
     /**
-     * Détails d'un usager.
+     * Détails d'un usager + ses celliers.
      */
     public function show($id)
     {
-        $user = User::findOrFail($id);
+        $user = User::with(['celliers'])
+            ->withCount('celliers')
+            ->findOrFail($id);
 
         return view('admin.users.show', [
             'user' => $user,
