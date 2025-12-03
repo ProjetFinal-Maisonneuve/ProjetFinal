@@ -1,26 +1,23 @@
 {{-- resources/views/admin/users/show.blade.php --}}
 @extends('layouts.app')
 
-@section('title', 'Détails de l’usager')
+@section('title', "Détails de l’usager")
 
 @section('content')
-<div class="max-w-6xl mx-auto px-4 space-y-6">
+<div class="max-w-6xl mx-auto px-4 mt-8 space-y-6">
 
+    {{-- Lien retour --}}
+    <x-back-btn
+        route="admin.users.index"
+        label="Retour à la liste"
+        class="mb-2"
+    />
 
-    <div class="flex items-center justify-between gap-4">
-        <x-page-header
-            :title="'Usager #'.$user->id.' – '.$user->name"
-            subtitle="Détails du compte et actions d’administration."
-        />
-
-        {{-- Bouton retour vers la liste --}}
-        <x-primary-btn
-            type="href"
-            route="admin.users.index"
-            label="Retour à la liste"
-            class="w-auto"
-        />
-    </div>
+    {{-- Titre de la page --}}
+    <x-page-header
+        :title="'Usager #'.$user->id.' – '.$user->name"
+        subtitle="Détails du compte et actions d’administration."
+    />
 
     {{-- Messages flash --}}
     @if(session('success'))
@@ -43,7 +40,9 @@
             <dl class="text-sm space-y-2">
                 <div>
                     <dt class="font-medium text-text-muted">Nom</dt>
-                    <dd>{{ $user->name }}</dd>
+                    <dd class="font-semibold text-button-default">
+                        {{ $user->name }}
+                    </dd>
                 </div>
 
                 <div>
@@ -95,7 +94,11 @@
             <h2 class="text-lg font-semibold mb-3">Actions d’administration</h2>
 
             {{-- Activer / désactiver --}}
-            <form method="POST" action="{{ route('admin.users.toggle-active', $user->id) }}" class="mb-4 space-y-2">
+            <form
+                method="POST"
+                action="{{ route('admin.users.toggle-active', $user->id) }}"
+                class="mb-4 space-y-2"
+            >
                 @csrf
 
                 <p class="text-sm text-text-muted">
