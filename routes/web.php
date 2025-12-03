@@ -117,6 +117,11 @@ Route::middleware('auth')->group(function () {
         [CellierController::class, 'updateNote']
     )->name('bouteilles.note.update');
 
+    Route::delete(
+        '/celliers/{cellier}/bouteilles/{bouteille}/note',
+        [CellierController::class, 'deleteNote']
+    )->name('bouteilles.note.delete');
+
     // PROFIL
     Route::get('/profil', [ProfileController::class, 'index'])->name('profile.index');
     Route::post('/profil/update-info', [ProfileController::class, 'updateInfo'])->name('profile.updateInfo');

@@ -25,7 +25,7 @@
             @if($editable)
                 <button
                     type="button"
-                    class="star-btn cursor-pointer transition-colors duration-200 flex-1 {{ $i <= $currentRating ? 'text-yellow-400' : 'text-gray-300' }} hover:text-yellow-400"
+                    class="star-btn cursor-pointer transition-colors duration-200 flex-1 {{ $i <= $currentRating ? 'text-primary' : 'text-gray-300' }} hover:text-primary"
                     data-star-value="{{ $i }}"
                     aria-label="Donner la note de {{ $i }} sur {{ $maxRating }}"
                     aria-pressed="{{ $i <= $currentRating ? 'true' : 'false' }}"
@@ -37,7 +37,7 @@
             @else
                 {{-- En lecture seule, on masque les étoiles individuelles car le conteneur a déjà le label global --}}
                 <span 
-                    class="star-display transition-colors duration-200 flex-1 {{ $i <= $currentRating ? 'text-yellow-400' : 'text-gray-300' }}"
+                    class="star-display transition-colors duration-200 flex-1 {{ $i <= $currentRating ? 'text-primary' : 'text-gray-300' }}"
                     aria-hidden="true"
                 >
                     <svg class="w-full h-12" fill="currentColor" viewBox="0 0 20 20" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
@@ -49,6 +49,18 @@
         @if($editable)
             <input type="hidden" name="{{ $name }}" value="{{ $currentRating }}" id="{{ $uniqueId }}-input">
             <span class="ml-2 text-sm text-text-muted whitespace-nowrap" aria-live="polite">{{ $currentRating > 0 ? $currentRating . '/5' : 'Non noté' }}</span>
+            @if($currentRating > 0)
+                <button
+                    type="button"
+                    class="clear-rating-btn ml-2 p-1 text-primary hover:text-primary-hover hover:bg-primary/10 rounded-full transition-colors duration-200 flex-shrink-0"
+                    aria-label="Supprimer l'évaluation"
+                    title="Supprimer l'évaluation"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            @endif
         @endif
     </div>
 </div>

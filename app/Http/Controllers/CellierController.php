@@ -444,13 +444,36 @@ class CellierController extends Controller
             'rating'           => 'nullable|integer|min:0|max:5',
         ]);
 
+        // Convertir rating vide ou 0 en null pour supprimer l'évaluation
+        $rating = isset($validated['rating']) && $validated['rating'] > 0 ? $validated['rating'] : null;
+        $noteDegustation = !empty($validated['note_degustation']) ? $validated['note_degustation'] : null;
+
         $bouteille->update([
-            'note_degustation' => $validated['note_degustation'] ?? null,
-            'rating'           => $validated['rating'] ?? null,
+            'note_degustation' => $noteDegustation,
+            'rating'           => $rating,
         ]);
 
         return redirect()
-            ->route('bouteilles.show', [$cellier, $bouteille]);
+            ->route('bouteilles.show', [$cellier, $bouteille])
+            ->with('success', 'Notes de dégustation mises à jour avec succès.');
+    }
+
+    public function deleteNote(Cellier $cellier, Bouteille $bouteille): RedirectResponse
+    {
+        $this->authorizeCellier($cellier);
+
+        if ($bouteille->cellier_id !== $cellier->id) {
+            abort(403);
+        }
+
+        $bouteille->update([
+            'note_degustation' => null,
+            'rating'           => null,
+        ]);
+
+        return redirect()
+            ->route('bouteilles.show', [$cellier, $bouteille])
+            ->with('success', 'Notes de dégustation supprimées avec succès.');
     }
 
     // Ajout de bouteille du catalogue au cellier via API

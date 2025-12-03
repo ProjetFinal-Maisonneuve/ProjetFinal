@@ -179,12 +179,20 @@
                         @else
                             <div class="space-y-6">
                                 {{-- Note et Avis --}}
-                                <div class="bg-gray-50 rounded-xl p-5 border border-gray-100">
+                                <div class="bg-gray-50 rounded-xl p-5 border border-gray-100 relative">
                                     <div class="flex justify-between items-center mb-3">
                                         <h3 class="font-semibold text-gray-900">Notes de dégustation</h3>
-                                        <a href="{{ route('bouteilles.note.edit', [$cellier, $bouteille]) }}" class="text-xs font-medium text-primary hover:text-primary-dark hover:underline transition-colors">
-                                            {{ (isset($donnees['note_degustation']) || isset($donnees['rating'])) ? 'Modifier' : 'Rédiger un avis' }}
-                                        </a>
+                                        @if(isset($donnees['note_degustation']) || isset($donnees['rating']))
+                                            <x-dropdown-action 
+                                                :id="'note-' . $bouteille->id" 
+                                                :deleteUrl="route('bouteilles.note.delete', [$cellier, $bouteille])" 
+                                                :editUrl="route('bouteilles.note.edit', [$cellier, $bouteille])" 
+                                            />
+                                        @else
+                                            <a href="{{ route('bouteilles.note.edit', [$cellier, $bouteille]) }}" class="text-base font-semibold text-primary hover:text-primary-dark hover:underline transition-colors px-3 py-1.5 rounded-lg hover:bg-primary/10">
+                                                Rédiger un avis
+                                            </a>
+                                        @endif
                                     </div>
 
                                     <div class="mb-3">
@@ -213,7 +221,7 @@
                                 <button
                                     type="button"
                                     id="shareBottleBtn"
-                                    class="flex items-center gap-3 px-6 py-3 bg-button-default border-2 border-primary text-primary font-semibold rounded-lg hover:bg-button-hover hover:text-white active:bg-primary-active transition-colors duration-300 text-base"
+                                    class="flex items-center gap-3 px-6 py-3 bg-button-default border-2 border-primary text-primary font-semibold rounded-lg hover:bg-button-hover hover:text-white active:bg-primary-active transition-colors duration-300 text-base cursor-pointer"
                                     data-bouteille-id="{{ $bouteille->id }}"
                                     aria-label="Partager cette bouteille"
                                 >

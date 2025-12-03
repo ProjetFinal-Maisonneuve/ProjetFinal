@@ -18,14 +18,22 @@ ratingContainers.forEach(container => {
         return;
     }
     
+    // Initialiser l'affichage du bouton X au chargement
+    if (currentRating > 0) {
+        const clearBtn = container.querySelector('.clear-rating-btn');
+        if (clearBtn) {
+            clearBtn.style.display = 'block';
+        }
+    }
+    
     // Fonction pour mettre en surbrillance les étoiles
     function highlightStars(starValue) {
         stars.forEach((s, i) => {
             if (i < starValue) {
                 s.classList.remove('text-gray-300');
-                s.classList.add('text-yellow-400');
+                s.classList.add('text-primary');
             } else {
-                s.classList.remove('text-yellow-400');
+                s.classList.remove('text-primary');
                 s.classList.add('text-gray-300');
             }
         });
@@ -67,7 +75,7 @@ ratingContainers.forEach(container => {
             }
             
             // Mettre à jour le texte affiché
-            const ratingText = container.querySelector('span');
+            const ratingText = container.querySelector('span[aria-live]');
             if (ratingText) {
                 ratingText.textContent = currentRating + '/5';
             }
@@ -90,12 +98,42 @@ ratingContainers.forEach(container => {
             }
             
             // Mettre à jour le texte affiché
-            const ratingText = container.querySelector('span');
+            const ratingText = container.querySelector('span[aria-live]');
             if (ratingText) {
                 ratingText.textContent = currentRating + '/5';
             }
         });
     });
+    
+    // Gestion du bouton de suppression de l'évaluation
+    const clearBtn = container.querySelector('.clear-rating-btn');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Réinitialiser la note à 0
+            currentRating = 0;
+            container.dataset.rating = 0;
+            
+            // Mettre à jour l'affichage des étoiles
+            updateStarDisplay(stars, 0);
+            
+            // Mettre à jour l'input caché
+            if (hiddenInput) {
+                hiddenInput.value = 0;
+            }
+            
+            // Mettre à jour le texte affiché
+            const ratingText = container.querySelector('span[aria-live]');
+            if (ratingText) {
+                ratingText.textContent = 'Non noté';
+            }
+            
+            // Masquer le bouton X
+            clearBtn.style.display = 'none';
+        });
+    }
 });
 
 /**
@@ -108,11 +146,24 @@ function updateStarDisplay(stars, rating) {
         const starValue = index + 1;
         if (starValue <= rating) {
             star.classList.remove('text-gray-300');
-            star.classList.add('text-yellow-400');
+            star.classList.add('text-primary');
         } else {
-            star.classList.remove('text-yellow-400');
+            star.classList.remove('text-primary');
             star.classList.add('text-gray-300');
         }
     });
+    
+    // Afficher/masquer le bouton X selon la note
+    const container = stars[0]?.closest('.star-rating-container');
+    if (container) {
+        const clearBtn = container.querySelector('.clear-rating-btn');
+        if (clearBtn) {
+            if (rating > 0) {
+                clearBtn.style.display = 'block';
+            } else {
+                clearBtn.style.display = 'none';
+            }
+        }
+    }
 }
 
