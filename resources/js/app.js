@@ -12,6 +12,8 @@ import "./ui/search";
 import "./ui/stopLinkPropagation";
 import "./ui/starRating";
 import "./ui/searchCellier";
+import "./ui/addToWishlist";
+
 
 
 /* ============================================================
