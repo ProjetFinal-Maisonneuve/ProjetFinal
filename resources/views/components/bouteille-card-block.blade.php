@@ -173,7 +173,7 @@
         @if($isCellierMode)
         <button 
             type="button"
-            class="add-to-wishlist-cellar flex items-center justify-center absolute top-1 right-10 
+            class="add-to-wishlist-cellar flex items-center justify-center absolute top-10 right-1 
                 bg-white/90 hover:bg-white/40 active:bg-white/20 shadow-md border border-border-base 
                 p-2 rounded-full transition z-20"
             data-bouteille-id="{{ $bouteilleId }}"

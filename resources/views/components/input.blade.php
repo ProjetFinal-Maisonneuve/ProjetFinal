@@ -11,7 +11,7 @@
 ])
 
 {{-- Champ de formulaire réutilisable --}}
-<div class="flex flex-col gap-1 flex-1 {{ $size === 'full' ? 'flex-1' : '' }}">
+<div class="flex flex-col gap-1 flex-1 {{ $size === 'full' ? 'w-full' : '' }}">
     @if($label)
         <label for="{{ $name }}" class="text-sm font-medium text-text-muted">
             {{ $label }}

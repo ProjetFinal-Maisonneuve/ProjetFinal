@@ -169,7 +169,7 @@
                                     </div>
                                 </div>
 
-                                <button type="submit" data-bottle-id="{{ $bouteilleCatalogue->id }}" class="add-to-cellar-btn w-full sm:flex-1 bg-gray-900 hover:bg-black text-white font-medium py-2.5 px-4 rounded-lg shadow-sm transition-all duration-200 flex items-center justify-center gap-2">
+                                <button type="submit" data-bottle-id="{{ $bouteilleCatalogue->id }}" class="add-to-cellar-btn w-full sm:flex-1 text-primary bg-button-default border-2 border-primary hover:bg-primary hover:text-white font-medium py-2.5 px-4 rounded-lg shadow-sm transition-all duration-200 flex items-center justify-center gap-2">
                                     <x-dynamic-component :component="'lucide-plus'" class="w-4 h-4"/>
                                     Ajouter au cellier
                                 </button>

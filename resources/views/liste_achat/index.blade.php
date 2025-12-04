@@ -35,8 +35,8 @@
                 :item="$item"
                 deleteUrl="{{ route('listeAchat.destroy', $item) }}" />
 
-            {{-- Image --}}
-            <div class="max-h-[160px] bg-gray-50 border-b border-gray-100 flex items-center justify-center 
+                {{-- Image --}}
+                <div class="max-h-[160px] bg-gray-200 border-b border-gray-100 flex items-center justify-center 
                             overflow-hidden aspect-3/4 py-3">
                 @if ($b->thumbnail ?? $b->image)
                     <img src="{{ $b->thumbnail ?? $b->image }}"

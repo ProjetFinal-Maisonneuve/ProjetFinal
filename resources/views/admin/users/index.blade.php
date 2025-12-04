@@ -10,7 +10,7 @@
     <div class="pt-5 pb-2">
         <x-page-header
             title="Gestion des usagers"
-            subtitle="Consulter, rechercher et gérer les comptes (activation, désactivation, suppression)."
+            undertitle="Consulter, rechercher et gérer les comptes (activation, désactivation, suppression)."
         />
     </div>
 

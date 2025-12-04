@@ -12,6 +12,7 @@
                 <x-page-header 
                     title="Évaluation et notes de dégustation" 
                     undertitle="Notez cette bouteille et ajoutez vos notes de dégustation" 
+                    :marginTop="'m-0'"
                 />
                 <x-back-btn :route="route('bouteilles.show', [$cellier, $bouteille])" />
             </div>

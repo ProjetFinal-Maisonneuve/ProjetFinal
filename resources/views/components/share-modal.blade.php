@@ -6,7 +6,7 @@
      aria-labelledby="shareModalTitle"
      aria-hidden="true">
 
-    <div class="bg-card rounded-lg shadow-xl p-6 w-[90%] max-w-md border border-border-base" role="document">
+    <div class="bg-card rounded-lg shadow-xl p-4 w-[90%] max-w-md border border-border-base" role="document">
         
         <div class="flex items-center justify-between mb-4">
             <h2 class="text-xl font-bold text-text-heading" id="shareModalTitle">

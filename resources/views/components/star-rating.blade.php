@@ -48,7 +48,7 @@
         @endfor
         @if($editable)
             <input type="hidden" name="{{ $name }}" value="{{ $currentRating }}" id="{{ $uniqueId }}-input">
-            <span class="ml-2 text-sm text-text-muted whitespace-nowrap" aria-live="polite">{{ $currentRating > 0 ? $currentRating . '/5' : 'Non noté' }}</span>
+            <span class="ml-2 text-sm text-text-muted whitespace-nowrap" aria-live="polite">{{ $currentRating > 0 ? $currentRating . '/5' : '0/5' }}</span>
             @if($currentRating > 0)
                 <button
                     type="button"
