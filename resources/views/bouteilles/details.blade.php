@@ -22,7 +22,7 @@
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <div class="grid grid-cols-1 md:grid-cols-12">
                 
-               
+                {{-- Colonne image + type --}}
                 <div class="md:col-span-4 bg-gray-50 flex items-center justify-center p-8 md:p-10 border-b md:border-b-0 md:border-r border-gray-100 relative">
                     {{-- Badge Type --}}
                     @if($donnees['type'])
@@ -37,18 +37,20 @@
                             if (str_starts_with($imagePath, 'http')) {
                                 $imageUrl = $imagePath;
                             } else {
+                                // Nettoyer les "storage/storage/..."
                                 while (str_starts_with($imagePath, 'storage/')) {
                                     $imagePath = substr($imagePath, 8);
                                 }
                                 $imageUrl = asset('storage/' . $imagePath);
                             }
                         @endphp
-                        
-                        <img 
-                            src="{{ $imageUrl }}" 
-                            alt="Bouteille {{ $donnees['nom'] }}" 
-                            class="w-auto h-64 md:h-80 object-contain drop-shadow-lg transition-transform duration-500 hover:scale-105"
-                        >
+
+                        {{-- 🔍 Image avec zoom (composant réutilisable) --}}
+                        <x-image-zoom
+                            :src="$imageUrl"
+                            :alt="'Bouteille '.$donnees['nom']"
+                            img-class="w-auto h-64 md:h-80 object-contain drop-shadow-lg transition-transform duration-500 hover:scale-105"
+                        />
                     @else
                         <div class="text-center opacity-20" role="status">
                             <svg version="1.0" xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 300 300">
@@ -60,7 +62,7 @@
                     @endif
                 </div>
 
-               
+                {{-- Colonne texte / infos --}}
                 <div class="md:col-span-8 p-6 md:p-8 flex flex-col h-full">
                     
                     {{-- 1. Header: Nom & Prix --}}
