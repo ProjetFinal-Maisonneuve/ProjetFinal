@@ -74,6 +74,52 @@ class ListeAchatController extends Controller
         ]);
     }
 
+    public function transfer(Request $request, ListeAchat $item)
+    {
+        $request->validate([
+            'cellier_id' => 'required|exists:celliers,id',
+        ]);
+
+        $cellierId = $request->cellier_id;
+        $quantite = $item->quantite;
+
+        $bouteille = $item->bouteilleCatalogue;
+
+        // Vérifier si la bouteille existe déjà dans ce cellier
+        $cellierItem = \DB::table('bouteille_cellier')
+            ->where('id_cellier', $cellierId)
+            ->where('id_bouteille_catalogue', $bouteille->id)
+            ->first();
+
+        if ($cellierItem) {
+
+            \DB::table('bouteille_cellier')
+                ->where('id_cellier', $cellierId)
+                ->where('id_bouteille_catalogue', $bouteille->id)
+                ->update([
+                    'quantite'   => $cellierItem->quantite + $quantite,
+                    'date_ajout' => now(),
+                ]);
+        } else {
+
+            \DB::table('bouteille_cellier')->insert([
+                'id_cellier'             => $cellierId,
+                'id_bouteille_catalogue' => $bouteille->id,
+                'quantite'               => $quantite,
+                'date_ajout'             => now(),
+                'achetee_non_listee'     => 0,
+            ]);
+        }
+
+        // Supprimer de la liste d’achat
+        $item->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => "L’item a été transféré dans votre cellier.",
+        ]);
+    }
+
     /**
      * Modifier quantité ou statut acheté
      */
