@@ -1,30 +1,32 @@
 @props([
-    'route' => null,     // Peut être un name de route ou un href complet
+    'route' => null,     // name de route ou URL complète
     'label' => 'Retour',
-    'icon'  => true,     // Affiche une icône si tu veux
+    'icon'  => true,     // Affiche l’icône flèche ou non
 ])
 
 @php
-    // Si tu fournis un name de route Laravel (ex: "admin.users.index")
-    if ($route && !str_contains($route, 'http') && !str_contains($route, '/')) {
-        $href = route($route);
-    }
-    // Si tu fournis un href complet ("/admin/users" ou "https://...")
-    elseif ($route) {
-        $href = $route;
-    }
-    // Sinon → on revient à la page précédente
-    else {
+    // Génération de l'URL
+    if ($route === null) {
+        // Pas de route fournie → on revient à la page précédente
         $href = url()->previous();
     }
-
-    $classes = "inline-flex items-center gap-2 
-                text-button-default font-medium 
-                hover:text-button-hover 
-                transition-all duration-200";
+    // Si tu passes une URL complète ou un chemin (/admin/users)
+    elseif (str_contains($route, 'http') || str_starts_with($route, '/')) {
+        $href = $route;
+    }
+    // Sinon, on considère que c'est un name de route Laravel
+    else {
+        $href = route($route);
+    }
 @endphp
 
-<a href="{{ $href }}" {{ $attributes->merge(['class' => $classes]) }}>
+<a href="{{ $href }}"
+   {{ $attributes->class(
+        'inline-flex items-center gap-2
+         text-button-default font-medium
+         hover:text-button-hover
+         transition-colors duration-200'
+    ) }}>
     @if ($icon)
         {{-- Icône décorative ignorée par les lecteurs d'écran --}}
         <x-dynamic-component
@@ -34,5 +36,5 @@
         />
     @endif
 
-    {{ $label }}
+    <span>{{ $label }}</span>
 </a>

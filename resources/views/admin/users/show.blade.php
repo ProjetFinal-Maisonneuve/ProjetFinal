@@ -4,32 +4,30 @@
 @section('title', "Détails de l’usager")
 
 @section('content')
-<div class="max-w-6xl mx-auto px-4 mt-8 space-y-6">
+<div class="max-w-6xl mx-auto px-4 space-y-6">
 
     {{-- Lien retour --}}
     <x-back-btn
         route="admin.users.index"
         label="Retour à la liste"
-        class="mb-2"
-    />
+        class="mb-2 pt-22  " />
 
     {{-- Titre de la page --}}
-    <x-page-header
+    <x-page-header class="" 
         :title="'Usager #'.$user->id.' – '.$user->name"
-        subtitle="Détails du compte et actions d’administration."
-    />
+        subtitle="Détails du compte et actions d’administration." />
 
     {{-- Messages flash --}}
     @if(session('success'))
-        <div class="bg-green-100 text-green-800 text-sm px-4 py-2 rounded-lg">
-            {{ session('success') }}
-        </div>
+    <div class="bg-green-100 text-green-800 text-sm px-4 py-2 rounded-lg">
+        {{ session('success') }}
+    </div>
     @endif
 
     @if(session('error'))
-        <div class="bg-red-100 text-red-800 text-sm px-4 py-2 rounded-lg">
-            {{ session('error') }}
-        </div>
+    <div class="bg-red-100 text-red-800 text-sm px-4 py-2 rounded-lg">
+        {{ session('error') }}
+    </div>
     @endif
 
     <div class="grid gap-6 md:grid-cols-2">
@@ -97,8 +95,7 @@
             <form
                 method="POST"
                 action="{{ route('admin.users.toggle-active', $user->id) }}"
-                class="mb-4 space-y-2"
-            >
+                class="mb-4 space-y-2">
                 @csrf
 
                 <p class="text-sm text-text-muted">
@@ -110,8 +107,7 @@
 
                 <x-primary-btn
                     type="submit"
-                    :label="$user->is_active ? 'Désactiver le compte' : 'Activer le compte'"
-                />
+                    :label="$user->is_active ? 'Désactiver le compte' : 'Activer le compte'" />
             </form>
 
             {{-- Supprimer --}}
@@ -130,15 +126,15 @@
         <h2 class="text-lg font-semibold mb-3">Celliers de l’usager</h2>
 
         @if ($user->celliers->isEmpty())
-            <p class="text-sm text-text-muted">Cet usager n’a aucun cellier.</p>
+        <p class="text-sm text-text-muted">Cet usager n’a aucun cellier.</p>
         @else
-            <ul class="text-sm list-disc pl-5 space-y-1">
-                @foreach($user->celliers as $cellier)
-                    <li>
-                        {{ $cellier->nom ?? 'Cellier sans nom' }} (ID: {{ $cellier->id }})
-                    </li>
-                @endforeach
-            </ul>
+        <ul class="text-sm list-disc pl-5 space-y-1">
+            @foreach($user->celliers as $cellier)
+            <li>
+                {{ $cellier->nom ?? 'Cellier sans nom' }} (ID: {{ $cellier->id }})
+            </li>
+            @endforeach
+        </ul>
         @endif
     </div>
 
