@@ -30,10 +30,12 @@
         <div class="relative flex flex-col rounded-2xl border border-gray-200 bg-white/80 shadow-sm 
                         hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden">
 
-            {{-- Bouton d’action (menu) --}}
+            {{-- Menu (3 points) --}}
             <x-dropdown-action
+                :id="$item->id"
                 :item="$item"
-                deleteUrl="{{ route('listeAchat.destroy', $item) }}" />
+                deleteUrl="{{ route('listeAchat.destroy', $item) }}"
+                transferUrl="{{ route('listeAchat.transfer', $item) }}" />
 
                 {{-- Image --}}
                 <div class="max-h-[160px] bg-gray-200 border-b border-gray-100 flex items-center justify-center 
@@ -126,15 +128,6 @@
                         </button>
 
                     </div>
-                    {{-- Bouton transférer --}}
-                    <button
-                        type="button"
-                        class="wishlist-transfer-btn mt-2 text-xs px-3 py-1 rounded-full 
-                               bg-primary/10 text-primary hover:bg-primary/20 transition"
-                        data-item-id="{{ $item->id }}"
-                        data-url="{{ route('listeAchat.transfer', $item) }}">
-                        Transférer au cellier
-                    </button>
                 </div>
             </div>
 
