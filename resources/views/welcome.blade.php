@@ -14,7 +14,7 @@
                             :nom="$bouteille->nom"
                             :type="$bouteille->typeVin?->nom"
                             :millesime="$bouteille->millesime"
-                            :urlImage="$bouteille->url_image"
+                            :urlImage="$bouteille->url_image_thumbnail ?? $bouteille->url_image"
                             :pays="$bouteille->pays?->nom"
                             :region="$bouteille->region?->nom"
                             :volume="$bouteille->volume"

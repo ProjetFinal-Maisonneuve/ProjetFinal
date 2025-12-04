@@ -75,4 +75,20 @@ class Bouteille extends Model
         
         return $bouteilleCatalogue?->image;
     }
+
+    /**
+     * Récupère l'image thumbnail de la bouteille depuis le catalogue SAQ si elle existe.
+     * 
+     * @return string|null URL du thumbnail ou null si non trouvée
+     */
+    public function getThumbnailFromCatalogue(): ?string
+    {
+        if (!$this->code_saq) {
+            return null;
+        }
+
+        $bouteilleCatalogue = BouteilleCatalogue::where('code_saQ', $this->code_saq)->first();
+        
+        return $bouteilleCatalogue?->thumbnail;
+    }
 }

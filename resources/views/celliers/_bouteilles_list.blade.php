@@ -35,7 +35,7 @@
                 <x-bouteille-card-block 
                     :id="$bouteille->id" 
                     :nom="$bouteille->nom" 
-                    :image="$bouteille->getImageFromCatalogue()"
+                    :image="$bouteille->getThumbnailFromCatalogue() ?? $bouteille->getImageFromCatalogue()"
                     :prix="$bouteille->prix ?? ''" 
                     mode="cellier"
                     :cellierId="$cellier->id"

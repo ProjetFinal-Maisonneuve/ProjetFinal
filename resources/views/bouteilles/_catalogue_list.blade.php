@@ -11,7 +11,7 @@
             <x-bouteille-card-block 
                 :id="$bouteille->id" 
                 :nom="$bouteille->nom" 
-                :image="$bouteille->image" 
+                :image="$bouteille->thumbnail ?? $bouteille->image" 
                 :prix="$bouteille->prix" 
             />
         @empty

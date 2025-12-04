@@ -38,6 +38,51 @@
             {{-- Image --}}
             <div class="max-h-[160px] bg-gray-50 border-b border-gray-100 flex items-center justify-center 
                             overflow-hidden aspect-3/4 py-3">
+<<<<<<< HEAD
+                    @if ($b->thumbnail ?? $b->image)
+                        <img src="{{ $b->thumbnail ?? $b->image }}" 
+                             alt="Image {{ $b->nom }}"
+                             class="max-w-[96px] max-h-[160px] object-contain">
+                    @else
+                        <x-dynamic-component 
+                            :component="'lucide-wine'" 
+                            class="w-7 h-7 text-primary/60"
+                        />
+                    @endif
+                </div>
+
+                {{-- Texte --}}
+                <div class="flex-1 p-4 flex flex-col gap-2">
+                    <p class="font-semibold text-gray-900 text-sm leading-tight line-clamp-2">
+                        {{ $b->nom }}
+                    </p>
+
+                    {{-- pays + format --}}
+                    <p class="text-xs text-gray-500">
+                        {{ $b->pays->nom ?? 'Pays inconnu' }} — 
+                        {{ $b->volume ?? 'Format inconnu' }}
+                    </p>
+
+                    {{-- prix / quantité / sous-total --}}
+                    <div class="mt-2 space-y-1 text-xs">
+                        <p class="text-gray-600">
+                            Prix : <span class="font-semibold">{{ number_format($b->prix, 2, ',', ' ') }} $</span>
+                        </p>
+
+                        <p class="text-gray-600">
+                            Quantité : <span class="font-semibold">{{ $item->quantite }}</span>
+                        </p>
+
+                        <p class="text-gray-700">
+                            Sous-total : 
+                            <span class="font-semibold">
+                                {{ number_format($b->prix * $item->quantite, 2, ',', ' ') }} $
+                            </span>
+                        </p>
+                    </div>
+                </div>
+
+=======
                 @if ($b->image)
                 <img src="{{ $b->image }}"
                     alt="Image {{ $b->nom }}"
@@ -47,6 +92,7 @@
                     :component="'lucide-wine'"
                     class="w-7 h-7 text-primary/60" />
                 @endif
+>>>>>>> ef4965ff53289269030e775cdf8cadef931f2541
             </div>
 
             {{-- Texte --}}
