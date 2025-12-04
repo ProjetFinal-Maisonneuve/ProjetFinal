@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ListeAchat;
 use App\Models\BouteilleCatalogue;
+use App\Models\Bouteille;
 use Illuminate\Http\Request;
 
 class ListeAchatController extends Controller
@@ -80,43 +81,73 @@ class ListeAchatController extends Controller
             'cellier_id' => 'required|exists:celliers,id',
         ]);
 
+        $user = auth()->user();
         $cellierId = $request->cellier_id;
-        $quantite = $item->quantite;
 
-        $bouteille = $item->bouteilleCatalogue;
-
-        // Vérifier si la bouteille existe déjà dans ce cellier
-        $cellierItem = \DB::table('bouteille_cellier')
-            ->where('id_cellier', $cellierId)
-            ->where('id_bouteille_catalogue', $bouteille->id)
-            ->first();
-
-        if ($cellierItem) {
-
-            \DB::table('bouteille_cellier')
-                ->where('id_cellier', $cellierId)
-                ->where('id_bouteille_catalogue', $bouteille->id)
-                ->update([
-                    'quantite'   => $cellierItem->quantite + $quantite,
-                    'date_ajout' => now(),
-                ]);
-        } else {
-
-            \DB::table('bouteille_cellier')->insert([
-                'id_cellier'             => $cellierId,
-                'id_bouteille_catalogue' => $bouteille->id,
-                'quantite'               => $quantite,
-                'date_ajout'             => now(),
-                'achetee_non_listee'     => 0,
-            ]);
+        // Vérifier que le cellier appartient à l'utilisateur
+        $cellier = $user->celliers()->find($cellierId);
+        
+        if (!$cellier) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cellier non trouvé ou vous n\'avez pas accès à ce cellier.',
+            ], 403);
         }
 
-        // Supprimer de la liste d’achat
+        $quantite = $item->quantite;
+        // Charger la bouteille du catalogue avec ses relations nécessaires
+        $bouteilleCatalogue = $item->bouteilleCatalogue;
+        
+        // Charger les relations si elles ne sont pas déjà chargées
+        if (!$bouteilleCatalogue->relationLoaded('pays')) {
+            $bouteilleCatalogue->load('pays');
+        }
+        if (!$bouteilleCatalogue->relationLoaded('typeVin')) {
+            $bouteilleCatalogue->load('typeVin');
+        }
+
+        // Vérifier si la bouteille existe déjà dans ce cellier
+        // Rechercher par nom et cellier_id (comme dans ajoutBouteilleApi)
+        $bouteilleExistante = Bouteille::where('cellier_id', $cellierId)
+            ->where('nom', $bouteilleCatalogue->nom)
+            ->first();
+
+        if ($bouteilleExistante) {
+            // Augmenter la quantité si la bouteille existe déjà
+            $bouteilleExistante->quantite += $quantite;
+            // Mettre à jour le code_saq si ce n'est pas déjà défini
+            if (empty($bouteilleExistante->code_saq) && !empty($bouteilleCatalogue->code_saQ)) {
+                $bouteilleExistante->code_saq = $bouteilleCatalogue->code_saQ;
+            }
+            $bouteilleExistante->save();
+        } else {
+            // Créer une nouvelle bouteille dans le cellier
+            $nouvelleBouteille = new Bouteille();
+            $nouvelleBouteille->cellier_id = $cellierId;
+            $nouvelleBouteille->nom = $bouteilleCatalogue->nom;
+            $nouvelleBouteille->pays = $bouteilleCatalogue->pays ? $bouteilleCatalogue->pays->nom : null;
+            $nouvelleBouteille->format = $bouteilleCatalogue->volume;
+            $nouvelleBouteille->quantite = $quantite;
+            $nouvelleBouteille->prix = $bouteilleCatalogue->prix;
+            $nouvelleBouteille->code_saq = $bouteilleCatalogue->code_saQ;
+            
+            // Ajouter type et millésime si disponibles
+            if ($bouteilleCatalogue->typeVin) {
+                $nouvelleBouteille->type = $bouteilleCatalogue->typeVin->nom;
+            }
+            if ($bouteilleCatalogue->millesime) {
+                $nouvelleBouteille->millesime = $bouteilleCatalogue->millesime;
+            }
+            
+            $nouvelleBouteille->save();
+        }
+
+        // Supprimer de la liste d'achat
         $item->delete();
 
         return response()->json([
             'success' => true,
-            'message' => "L’item a été transféré dans votre cellier.",
+            'message' => "L'item a été transféré dans votre cellier.",
         ]);
     }
 
