@@ -16,6 +16,8 @@ import "./ui/addToWishlist";
 import "./ui/typewriter-toast";
 import "./ui/shareBottle";
 import "./ui/addToWishlistFromCellar";
+import "./ui/wishlistManage";
+import "./ui/wishlistTransfer";
 
 
 /* ============================================================

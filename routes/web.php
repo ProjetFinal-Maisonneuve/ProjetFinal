@@ -140,6 +140,10 @@ Route::middleware('auth')->group(function () {
 
     Route::delete('/liste-achat/{item}', [ListeAchatController::class, 'destroy'])
         ->name('listeAchat.destroy');
+        
+    Route::post('/liste-achat/{item}/transfer', [ListeAchatController::class, 'transfer'])
+    ->name('listeAchat.transfer');
+    
 
     // PARTAGE
     // Générer un lien de partage unique pour une bouteille
