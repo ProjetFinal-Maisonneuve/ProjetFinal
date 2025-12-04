@@ -390,13 +390,23 @@ GRAPHQL;
             $description = strip_tags($produit['short_description']['html']);
         }
         
-        $urlImage = null;
+        // Extraire l'URL de l'image haute qualité (pour la page de détails)
+        $urlImageFull = null;
         if (isset($produit['image']['url'])) {
-            $urlImage = $produit['image']['url'];
-        } elseif (isset($produit['small_image']['url'])) {
-            $urlImage = $produit['small_image']['url'];
+            $urlImageFull = $produit['image']['url'];
         } elseif (isset($productView['images'][0]['url'])) {
-            $urlImage = $productView['images'][0]['url'];
+            $urlImageFull = $productView['images'][0]['url'];
+        }
+        
+        // Extraire l'URL de l'image thumbnail (pour les cartes)
+        $urlImageThumbnail = null;
+        if (isset($produit['small_image']['url'])) {
+            $urlImageThumbnail = $produit['small_image']['url'];
+        } elseif (isset($produit['image']['url'])) {
+            // Fallback: utiliser l'image principale si small_image n'existe pas
+            $urlImageThumbnail = $produit['image']['url'];
+        } elseif (isset($productView['images'][0]['url'])) {
+            $urlImageThumbnail = $productView['images'][0]['url'];
         }
         
         $attributes = [];
@@ -447,9 +457,20 @@ GRAPHQL;
             return null;
         }
 
-        $cheminImage = null;
-        if ($urlImage) {
-            $cheminImage = $this->telechargerImage($urlImage, $codeSaq);
+        // Télécharger l'image haute qualité
+        $cheminImageFull = null;
+        if ($urlImageFull) {
+            $cheminImageFull = $this->telechargerImage($urlImageFull, $codeSaq, 'full');
+        }
+
+        // Télécharger l'image thumbnail
+        $cheminImageThumbnail = null;
+        if ($urlImageThumbnail && $urlImageThumbnail !== $urlImageFull) {
+            // Télécharger le thumbnail seulement s'il est différent de l'image principale
+            $cheminImageThumbnail = $this->telechargerImage($urlImageThumbnail, $codeSaq, 'thumbnail');
+        } elseif ($urlImageThumbnail && $urlImageThumbnail === $urlImageFull && $cheminImageFull) {
+            // Si les deux URLs sont identiques, utiliser le même chemin pour le thumbnail
+            $cheminImageThumbnail = $cheminImageFull;
         }
 
         return [
@@ -457,10 +478,10 @@ GRAPHQL;
             'nom' => $nom,
             'prix' => $prix,
             'description' => $description,
-            // Stocker le chemin avec un slash initial pour la compatibilité avec asset()
             // Stocker le chemin relatif sans /storage/ au début (ex: 'products/produit_xxx.jpg')
-            // Le composant utilisera asset('storage/' . $urlImage) pour générer l'URL complète
-            'url_image' => $cheminImage ?: ($urlImage ?: null),
+            // L'accessor utilisera asset('storage/' . $url_image) pour générer l'URL complète
+            'url_image' => $cheminImageFull ?: ($urlImageFull ?: null),
+            'url_image_thumbnail' => $cheminImageThumbnail ?: ($urlImageThumbnail && $urlImageThumbnail !== $urlImageFull ? $urlImageThumbnail : null),
             'url_saq' => $urlSaq,
             'volume' => $volume,
             'millesime' => $millesime,
@@ -526,14 +547,15 @@ GRAPHQL;
      * 
      * @param string|null $urlImage URL de l'image à télécharger
      * @param string $codeSaq Code SAQ du produit pour générer le nom de fichier
-     * @return string|null Chemin relatif de l'image sauvegardée (ex: 'products/produit_12345.jpg') 
+     * @param string $type Type d'image: 'full' pour haute qualité, 'thumbnail' pour miniature (défaut: 'full')
+     * @return string|null Chemin relatif de l'image sauvegardée (ex: 'products/produit_12345.jpg' ou 'products/produit_12345_thumb.jpg') 
      *                     ou null en cas d'échec
      */
-    private function telechargerImage($urlImage, $codeSaq)
+    private function telechargerImage($urlImage, $codeSaq, $type = 'full')
     {
         try {
             if (empty($urlImage)) {
-                Log::debug("Image URL vide pour produit {$codeSaq}");
+                Log::debug("Image URL vide pour produit {$codeSaq} (type: {$type})");
                 return null;
             }
 
@@ -559,23 +581,24 @@ GRAPHQL;
             $extension = pathinfo($cheminUrl, PATHINFO_EXTENSION) ?: 'jpg';
             
             // Optimiser les images swatch pour obtenir une meilleure résolution
-            // Remplace les miniatures 30x30 par des versions 500x500
-            if (strpos($urlImage, '/media/attribute/swatch/swatch_image/') !== false) {
+            // Remplace les miniatures 30x30 par des versions 500x500 (uniquement pour l'image full)
+            if ($type === 'full' && strpos($urlImage, '/media/attribute/swatch/swatch_image/') !== false) {
                 $urlImage = str_replace('/30x30/', '/500x500/', $urlImage);
             }
 
-            // Générer un nom de fichier sécurisé basé sur le code SAQ
-            $nomFichier = 'produit_' . preg_replace('/[^a-zA-Z0-9]/', '_', $codeSaq) . '.' . $extension;
+            // Générer un nom de fichier sécurisé basé sur le code SAQ avec suffixe pour le thumbnail
+            $suffixe = ($type === 'thumbnail') ? '_thumb' : '';
+            $nomFichier = 'produit_' . preg_replace('/[^a-zA-Z0-9]/', '_', $codeSaq) . $suffixe . '.' . $extension;
             $chemin = 'products/' . $nomFichier;
 
             // Vérifier si l'image existe déjà dans le stockage local
             // Si elle existe, on retourne le chemin sans re-télécharger pour optimiser les performances
             if (Storage::disk('public')->exists($chemin)) {
-                Log::debug("Image déjà existante pour produit {$codeSaq}, téléchargement ignoré: {$chemin}");
+                Log::debug("Image déjà existante pour produit {$codeSaq} (type: {$type}), téléchargement ignoré: {$chemin}");
                 return $chemin;
             }
 
-            Log::debug("Téléchargement image pour produit {$codeSaq}", [
+            Log::debug("Téléchargement image pour produit {$codeSaq} (type: {$type})", [
                 'original_url' => $originalUrl,
                 'final_url' => $urlImage,
                 'filename' => $nomFichier
@@ -592,15 +615,15 @@ GRAPHQL;
             if (strlen($contenuImage) > 0) {
                 // Sauvegarder l'image dans le disque public
                 Storage::disk('public')->put($chemin, $contenuImage);
-                Log::info("Image téléchargée avec succès pour produit {$codeSaq}: {$chemin}");
+                Log::info("Image téléchargée avec succès pour produit {$codeSaq} (type: {$type}): {$chemin}");
                 return $chemin;
             }
 
-            Log::warning("Image vide téléchargée pour produit {$codeSaq} depuis {$urlImage}");
+            Log::warning("Image vide téléchargée pour produit {$codeSaq} (type: {$type}) depuis {$urlImage}");
             return null;
         } catch (\Exception $e) {
             // Logger les erreurs de téléchargement avec le contexte complet
-            Log::error("Erreur lors du téléchargement de l'image pour produit {$codeSaq}", [
+            Log::error("Erreur lors du téléchargement de l'image pour produit {$codeSaq} (type: {$type})", [
                 'url' => $urlImage ?? $originalUrl ?? 'inconnue',
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
@@ -635,6 +658,7 @@ GRAPHQL;
                 'nom' => $donneesProduit['nom'],
                 'prix' => $donneesProduit['prix'],
                 'url_image' => $donneesProduit['url_image'],
+                'url_image_thumbnail' => $donneesProduit['url_image_thumbnail'] ?? null,
                 'url_saq' => $donneesProduit['url_saq'] ?? null,
                 'volume' => $donneesProduit['volume'],
                 'millesime' => $donneesProduit['millesime'],

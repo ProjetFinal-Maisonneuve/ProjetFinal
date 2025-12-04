@@ -22,6 +22,7 @@ class BouteilleCatalogue extends Model
         'millesime',
         'prix',
         'url_image',
+        'url_image_thumbnail',
         'url_saq',
         'volume',
         'date_import',
@@ -54,6 +55,39 @@ class BouteilleCatalogue extends Model
         // Enlever tous les préfixes "storage/" jusqu'à ce qu'il n'y en ait plus
         while (str_starts_with($imagePath, 'storage/')) {
             $imagePath = substr($imagePath, 8); // Enlever "storage/" (8 caractères)
+        }
+        
+        // Ajouter storage/ une seule fois et utiliser asset() pour générer l'URL complète
+        return asset('storage/' . $imagePath);
+    }
+
+    /**
+     * Accessor pour obtenir l'URL complète de l'image thumbnail formatée.
+     * Permet d'utiliser $bouteille->thumbnail au lieu de $bouteille->url_image_thumbnail
+     * avec la normalisation du chemin.
+     * 
+     * Si le thumbnail n'existe pas, retourne l'image principale comme fallback.
+     */
+    public function getThumbnailAttribute()
+    {
+        // Utiliser le thumbnail s'il existe, sinon fallback sur l'image principale
+        $imageUrl = $this->url_image_thumbnail ?: $this->url_image;
+        
+        if (!$imageUrl) {
+            return null;
+        }
+
+        // Normaliser le chemin : enlever tous les préfixes storage/ et / au début
+        $imagePath = ltrim($imageUrl, '/');
+        
+        // Enlever tous les préfixes "storage/" jusqu'à ce qu'il n'y en ait plus
+        while (str_starts_with($imagePath, 'storage/')) {
+            $imagePath = substr($imagePath, 8); // Enlever "storage/" (8 caractères)
+        }
+        
+        // Si c'est une URL externe (commence par http), la retourner telle quelle
+        if (str_starts_with($imagePath, 'http')) {
+            return $imagePath;
         }
         
         // Ajouter storage/ une seule fois et utiliser asset() pour générer l'URL complète
