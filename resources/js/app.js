@@ -15,6 +15,8 @@ import "./ui/searchCellier";
 import "./ui/addToWishlist";
 import "./ui/typewriter-toast";
 import "./ui/shareBottle";
+import "./ui/addToWishlistFromCellar";
+
 
 /* ============================================================
    MODULE : Toasts – Petites notifications
