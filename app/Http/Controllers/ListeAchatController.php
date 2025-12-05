@@ -247,4 +247,29 @@ class ListeAchatController extends Controller
             'html' => view('liste_achat._liste_achat_list', compact('items', 'count'))->render()
         ]);
     }
+    // Suggestions de recherche pour l'autocomplétion
+    public function suggest(Request $request)
+    {
+        $search = $request->search;
+
+        if (!$search) {
+            return response()->json([]);
+        }
+
+        $user = auth()->user();
+
+        $results = $user->listeAchat()
+            ->join('bouteille_catalogue', 'liste_achat.bouteille_catalogue_id', '=', 'bouteille_catalogue.id')
+
+            // Filtre
+            ->where('bouteille_catalogue.nom', 'like', '%' . $search . '%')
+
+            // Sélection
+            ->select('bouteille_catalogue.nom')
+            ->distinct()
+            ->limit(10)
+            ->get();
+
+        return response()->json($results);
+    }
 }

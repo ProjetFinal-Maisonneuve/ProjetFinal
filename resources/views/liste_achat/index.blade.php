@@ -18,6 +18,7 @@
         :regions="$regions" 
         :millesimes="$millesimes" 
         url="/liste-achat/search" 
+        suggestionUrl="/liste-achat/suggest"
         containerID="listeAchatContainer" 
     />
 

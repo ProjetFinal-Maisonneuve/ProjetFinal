@@ -25,6 +25,8 @@ const container = document.getElementById(containerId);
 
 // URL API (catalogue ou liste d’achat)
 const baseUrl = searchWrapper?.dataset.url || "/catalogue/search";
+const suggestionUrl =
+    searchWrapper?.dataset.suggestionUrl || "/catalogue/suggest";
 
 // Suggestions
 const suggestionsBox = document.getElementById("suggestionsBox");
@@ -161,14 +163,14 @@ if (searchInput) {
 
     searchInput.addEventListener("input", (e) => {
         const query = e.target.value.trim();
-        if (query.length < 2) {
+        if (query.length < 1) {
             if (suggestionsBox) suggestionsBox.classList.add("hidden");
             return;
         }
 
         clearTimeout(suggestionTimeout);
         suggestionTimeout = setTimeout(() => {
-            fetch(`/catalogue/suggest?search=${encodeURIComponent(query)}`)
+            fetch(`${suggestionUrl}?search=${encodeURIComponent(query)}`)
                 .then((res) => res.json())
                 .then((items) => renderSuggestions(items));
         }, 150);
