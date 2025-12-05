@@ -1,70 +1,63 @@
-// Récupération des éléments du DOM
+// Champs du DOM
 const searchInput = document.getElementById("searchInput");
 const paysFilter = document.getElementById("paysFilter");
 const typeFilter = document.getElementById("typeFilter");
 const regionFilter = document.getElementById("regionFilter");
 const millesimeFilter = document.getElementById("millesimeFilter");
-const container = document.getElementById("catalogueContainer");
 const priceMinFilter = document.getElementById("priceMin");
 const priceMaxFilter = document.getElementById("priceMax");
 const sortFilter = document.getElementById("sortFilter");
+
+// Boutons
 const resetFiltersBtn = document.getElementById("resetFiltersBtn");
 const applyFiltersBtn = document.getElementById("applyFiltersBtn");
+const searchWrapper = document.querySelector("[data-container]");
 
-// Toggle des options de tri / filtres
+// Bottom sheet filtres
 const sortOptionsBtn = document.getElementById("sortOptionsBtn");
 const filtersContainer = document.getElementById("filtersContainer");
 const filtersOverlay = document.getElementById("filtersOverlay");
 const dragHandle = document.getElementById("dragHandle");
 
+// Conteneur des cartes (catalogue ou liste d’achat)
+const containerId = searchWrapper?.dataset.container || "catalogueContainer";
+const container = document.getElementById(containerId);
+
+// URL API (catalogue ou liste d’achat)
+const baseUrl = searchWrapper?.dataset.url || "/catalogue/search";
+
+// Suggestions
 const suggestionsBox = document.getElementById("suggestionsBox");
 let suggestionTimeout = null;
 
-// Fonction de reset des filtres
+// Reset des filtres
 function resetFilters() {
-    if (
-        !paysFilter ||
-        !typeFilter ||
-        !millesimeFilter ||
-        !priceMinFilter ||
-        !priceMaxFilter ||
-        !sortFilter ||
-        !searchInput
-    ) {
-        return;
-    }
-
-    paysFilter.value = "";
-    typeFilter.value = "";
+    if (searchInput) searchInput.value = "";
+    if (paysFilter) paysFilter.value = "";
+    if (typeFilter) typeFilter.value = "";
     if (regionFilter) regionFilter.value = "";
-    millesimeFilter.value = "";
-    priceMinFilter.value = "";
-    priceMaxFilter.value = "";
-    sortFilter.value = "date_import-desc";
-    searchInput.value = "";
-
-    // On relance le catalogue sans aucun filtre
-    fetchCatalogue();
+    if (millesimeFilter) millesimeFilter.value = "";
+    if (priceMinFilter) priceMinFilter.value = "";
+    if (priceMaxFilter) priceMaxFilter.value = "";
+    if (sortFilter) sortFilter.value = "date_import-desc";
+    fetchCatalogue(); // Call sans arg → baseUrl utilisé
 }
 
-// Fonction de toggle des options de tri / filtres (bottom sheet)
+// Ouverture / fermeture panel
 function toggleSortOptions() {
     if (!filtersContainer || !filtersOverlay) return;
+    const isHidden = filtersContainer.classList.contains("hidden");
 
-    if (filtersContainer.classList.contains("hidden")) {
+    if (isHidden) {
         filtersOverlay.classList.remove("hidden");
         filtersContainer.classList.remove("hidden");
-
         setTimeout(() => {
             filtersOverlay.classList.add("opacity-50");
             filtersContainer.classList.remove("translate-y-[100%]");
-            filtersContainer.classList.add("translate-y-0");
         }, 10);
     } else {
-        filtersContainer.classList.remove("translate-y-0");
         filtersContainer.classList.add("translate-y-[100%]");
         filtersOverlay.classList.remove("opacity-50");
-
         setTimeout(() => {
             filtersOverlay.classList.add("hidden");
             filtersContainer.classList.add("hidden");
@@ -72,18 +65,11 @@ function toggleSortOptions() {
     }
 }
 
-// Événements pour ouvrir / fermer le panneau
-if (sortOptionsBtn) {
-    sortOptionsBtn.addEventListener("click", toggleSortOptions);
-}
-if (filtersOverlay) {
-    filtersOverlay.addEventListener("click", toggleSortOptions);
-}
-if (dragHandle) {
-    dragHandle.addEventListener("click", toggleSortOptions);
-}
+if (sortOptionsBtn) sortOptionsBtn.addEventListener("click", toggleSortOptions);
+if (filtersOverlay) filtersOverlay.addEventListener("click", toggleSortOptions);
+if (dragHandle) dragHandle.addEventListener("click", toggleSortOptions);
 
-// Debounce pour limiter la fréquence des appels AJAX lors de la saisie
+// Debounce
 function debounce(fn, delay = 300) {
     let timer;
     return (...args) => {
@@ -92,21 +78,24 @@ function debounce(fn, delay = 300) {
     };
 }
 
-// Fonction principale pour fetch le catalogue avec les filtres
-function fetchCatalogue(url = "/catalogue/search") {
-    if (!container || !searchInput || !sortFilter) return;
+// Fetch catalogue / liste d’achat
+function fetchCatalogue(customUrl = baseUrl) {
+    // customUrl = lien de pagination OU baseUrl
+    if (!container) return;
 
+    // Tri
     let sortBy = "";
     let sortDirection = "";
 
-    if (sortFilter.value) {
-        const parts = sortFilter.value.split("-");
-        sortBy = parts[0] || "";
-        sortDirection = parts[1] || "";
+    if (sortFilter && sortFilter.value) {
+        const [field, dir] = sortFilter.value.split("-");
+        sortBy = field || "";
+        sortDirection = dir || "";
     }
 
+    // Params de la requête
     const params = new URLSearchParams({
-        search: searchInput.value || "",
+        search: searchInput?.value || "",
         pays: paysFilter?.value || "",
         type: typeFilter?.value || "",
         region: regionFilter?.value || "",
@@ -117,121 +106,88 @@ function fetchCatalogue(url = "/catalogue/search") {
         sort_direction: sortDirection,
     });
 
-    // Construire l'URL finale avec les paramètres de requête
-    const finalUrl = url.includes("?")
-        ? `${url}&${params.toString()}`
-        : `${url}?${params.toString()}`;
+    // URL finale
+    const finalUrl = customUrl.includes("?")
+        ? `${customUrl}&${params.toString()}`
+        : `${customUrl}?${params.toString()}`;
 
-    // Faire la requête AJAX
+    // Requête AJAX
     fetch(finalUrl)
         .then((res) => res.json())
         .then((data) => {
-            if (container) {
-                container.innerHTML = data.html;
-                window.dispatchEvent(new CustomEvent("catalogueReloaded"));
-
-                // Re-bind pagination links pour AJAX
-                bindPaginationLinks();
-
-                // Rebind les boutons wishlist
-            window.dispatchEvent(new CustomEvent("catalogueReloaded"));
-        
-            }
+            container.innerHTML = data.html; // Remplace les cartes
+            bindPaginationLinks(); // Rebind les liens page=...
+            window.dispatchEvent(new CustomEvent("catalogueReloaded")); // Pour rebrancher d’autres JS
         })
-        .catch((err) => {
-            console.error("Erreur lors du fetch catalogue :", err);
-        });
+        .catch((err) => console.error("Erreur AJAX :", err));
 }
 
-// Rendu des suggestions (auto-complétion)
+// Suggestions recherche
 function renderSuggestions(items) {
     if (!suggestionsBox) return;
 
-    // Si pas de suggestions, cacher la boîte
-    if (items.length === 0) {
+    if (!items.length) {
         suggestionsBox.classList.add("hidden");
         return;
     }
 
-    let html = "";
-    items.forEach((item) => {
-        html += `
-            <div 
-                class="px-3 py-2 cursor-pointer hover:bg-gray-100 suggestion-item"
-                data-value="${item.nom}">
-                ${item.nom}
-            </div>`;
-    });
+    suggestionsBox.innerHTML = items
+        .map(
+            (item) => `
+        <div class="px-3 py-2 cursor-pointer hover:bg-gray-100 suggestion-item"
+             data-value="${item.nom}">
+            ${item.nom}
+        </div>`
+        )
+        .join("");
 
-    suggestionsBox.innerHTML = html;
     suggestionsBox.classList.remove("hidden");
 
-    // Clic sur une suggestion
     document.querySelectorAll(".suggestion-item").forEach((el) => {
         el.addEventListener("click", () => {
             searchInput.value = el.dataset.value;
             suggestionsBox.classList.add("hidden");
-            debouncedFetch(); // relance le catalogue avec le texte choisi
+            debouncedFetch(); // Relance fetchCatalogue()
         });
     });
 }
 
-// Debounced fetch pour la recherche texte
-const debouncedFetch = debounce(fetchCatalogue, 300);
+// DebouncedFetch sans param → fetchCatalogue() utilisera baseUrl
+const debouncedFetch = debounce(() => fetchCatalogue(), 300);
 
-// Recherche texte (input)
+// Écoute entrée recherche
 if (searchInput) {
     searchInput.addEventListener("input", () => debouncedFetch());
 
-    searchInput.addEventListener("input", function () {
-        const query = this.value.trim();
-
-        // Si la requête est trop courte, cacher les suggestions
+    searchInput.addEventListener("input", (e) => {
+        const query = e.target.value.trim();
         if (query.length < 2) {
-            if (suggestionsBox) {
-                suggestionsBox.classList.add("hidden");
-            }
+            if (suggestionsBox) suggestionsBox.classList.add("hidden");
             return;
         }
 
         clearTimeout(suggestionTimeout);
-
-        // Auto-complétion (suggestions)
         suggestionTimeout = setTimeout(() => {
             fetch(`/catalogue/suggest?search=${encodeURIComponent(query)}`)
                 .then((res) => res.json())
-                .then((items) => {
-                    renderSuggestions(items);
-                });
+                .then((items) => renderSuggestions(items));
         }, 150);
     });
 }
 
-// on enlève les fetch automatiques sur changement de filtres,
-// et on passe par le bouton "Appliquer les filtres"
-
-// Filtres (on ne fait plus de fetch ici)
-// if (paysFilter)      paysFilter.addEventListener("change", () => debouncedFetch());
-// if (typeFilter)      typeFilter.addEventListener("change", () => debouncedFetch());
-// if (millesimeFilter) millesimeFilter.addEventListener("change", () => debouncedFetch());
-// if (priceMinFilter)  priceMinFilter.addEventListener("input", () => debouncedFetch());
-// if (priceMaxFilter)  priceMaxFilter.addEventListener("input", () => debouncedFetch());
-// if (sortFilter)      sortFilter.addEventListener("change", () => debouncedFetch());
-
-//  bouton "Appliquer les filtres"
+// Boutons appliquer / reset
 if (applyFiltersBtn) {
     applyFiltersBtn.addEventListener("click", () => {
-        fetchCatalogue(); // on applique tous les filtres en même temps
-        toggleSortOptions(); // on ferme le panneau après application
+        fetchCatalogue(); // BaseUrl + filtres
+        toggleSortOptions(); // Ferme le panneau
     });
 }
 
-// Reset des filtres
 if (resetFiltersBtn) {
     resetFiltersBtn.addEventListener("click", resetFilters);
 }
 
-// Clic en dehors de la boîte de suggestions pour la cacher
+// Cacher suggestions au clic
 if (searchInput && suggestionsBox) {
     document.addEventListener("click", (e) => {
         if (
@@ -243,19 +199,19 @@ if (searchInput && suggestionsBox) {
     });
 }
 
-// AJAX Pagination
+// Pagination AJAX
 function bindPaginationLinks() {
     if (!container) return;
     const links = container.querySelectorAll("a[href*='page=']");
     links.forEach((link) => {
-        link.addEventListener("click", function (e) {
+        link.addEventListener("click", (e) => {
             e.preventDefault();
-            fetchCatalogue(this.href);
+            fetchCatalogue(link.href); // Ici on passe l’URL de la page
         });
     });
 }
 
-// Lier les liens de pagination au chargement initial
+// Bind initial
 if (container) {
     bindPaginationLinks();
 }

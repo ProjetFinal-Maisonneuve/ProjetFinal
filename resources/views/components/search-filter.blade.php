@@ -5,10 +5,14 @@
     'millesimes' => [],
     // 'catalogue' par défaut, 'cellier' pour ton écran de cellier
     'mode' => 'catalogue',
+    // URL pour les requêtes AJAX
+    'url' => "/catalogue/search",
+    // ID du conteneur à mettre à jour
+    'containerID' => "catalogueContainer",
 ])
 
 {{-- Composant de recherche et filtres (réutilisable cellier + catalogue) --}}
-<div {{ $attributes->merge(['class' => 'mt-4 mb-4']) }} role="search" aria-label="Barre de recherche et filtres">
+<div {{ $attributes->merge(['class' => 'mt-4 mb-4']) }} data-url="{{ $url }}" data-container="{{ $containerID }}" role="search" aria-label="Barre de recherche et filtres">
     <div class="relative flex gap-5 items-center"> 
         <x-input 
             type="text" 

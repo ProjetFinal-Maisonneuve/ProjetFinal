@@ -150,6 +150,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/liste-achat/{item}/transfer', [ListeAchatController::class, 'transfer'])
         ->name('listeAchat.transfer');
 
+    Route::get('/liste-achat/search', [ListeAchatController::class, 'search'])
+        ->name('listeAchat.search');
+
     Route::get('/api/listeAchat/stats', function () {
 
         $user = Auth::user();
