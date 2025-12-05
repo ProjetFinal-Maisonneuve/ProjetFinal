@@ -1,5 +1,5 @@
 {{-- Props permis --}}
-@props(['name'=>'Cellier', 'amount' => '0', 'id' => ''])
+@props(['name'=>'cellier', 'amount' => '0', 'id' => ''])
 
 <div 
     id="cellier-{{ $id }}"
@@ -23,9 +23,9 @@
             @if ($amount == 0)
                 <p class="text-gray-400 italic">Aucune bouteille</p>
             @elseif ($amount == 1)
-                <p class="text-gray-600">1 Bouteille</p>
+                <p class="text-gray-600">1 bouteille</p>
             @else
-                <p class="text-gray-600">{{ $amount }} Bouteilles</p>
+                <p class="text-gray-600">{{ $amount }} bouteilles</p>
             @endif
         </div>
     </div>

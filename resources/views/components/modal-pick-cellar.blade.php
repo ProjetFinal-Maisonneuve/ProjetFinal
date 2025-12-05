@@ -12,7 +12,7 @@
 >
     <span class="flex items-center justify-between mb-4">
         {{-- Ajout d'un ID pour lier le titre à la modale --}}
-        <h1 id="titre-ajout-vin-modal" class="text-3xl text-heading font-heading">Ajouter un vins</h1>
+        <h1 id="titre-ajout-vin-modal" class="text-3xl text-heading font-heading">Ajouter un vin</h1>
 
         <x-dynamic-component
             :component="'lucide-x'"

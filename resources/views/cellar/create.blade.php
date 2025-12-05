@@ -1,11 +1,11 @@
 @extends('layouts.app')
-@section('title', 'Ajout Celliers')
+@section('title', 'Créer un cellier')
 
 {{-- Formulaire d'ajout d'un nouveau cellier --}}
 @section('content')
     <section class="p-4 pt-2" aria-label="Ajout d'un nouveau cellier">
         {{-- Insertion du composant d'en-tête de page --}}
-        <x-page-header title="Ajout Celliers" />
+        <x-page-header title="Créer un cellier" />
         <div class="mt-6">
             <form 
                 action="{{ route('cellar.store') }}" 

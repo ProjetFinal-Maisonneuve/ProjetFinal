@@ -26,19 +26,14 @@ Permettre à un utilisateur de :
 - ✅ **Gestion multi-celliers par utilisateur** (création, modification, suppression)
 - ✅ **CRUD complet sur les bouteilles de cellier** (ajout, modification, suppression, affichage)
 - ✅ **Système de notes de dégustation** (notes textuelles et notation par étoiles 0-10)
-- ✅ **Tri des bouteilles** (par nom, pays, type, quantité, format, prix, date d'ajout)
+- ✅ **Recherche & filtres avancés** (par nom, pays, type, quantité, format, prix, date d'ajout)
 - ✅ **Ajout de bouteilles depuis le catalogue SAQ** au cellier
 - ✅ **Ajout manuel de bouteilles** (pour les vins non répertoriés à la SAQ)
 - ✅ **Système de notifications toast** (succès/erreur)
 - ✅ **Affichage détaillé des bouteilles** (avec images, informations complètes)
 - ✅ **Gestion des quantités** (augmentation/diminution rapide)
-
-### ⏳ Fonctionnalités à venir
-
-- ⏳ Recherche & filtres avancés (nom, type, pays, millésime, région…)
-- ⏳ Liste d'achat
-- ⏳ Partage social
-- ⏳ Normalisation des régions (table `regions` séparée)
+- ✅ **Liste d'achat**
+- ✅ **Partage social**
 
 ---
 
@@ -216,24 +211,3 @@ Tommy Bourgeois
     ```
 
     Voir [SAQSCRAPER_README.md](SAQSCRAPER_README.md) pour la documentation complète du service.
-
----
-
-## 📝 Notes de développement
-
-### Structure de la base de données
-- **Tables principales** : `users`, `celliers`, `bouteilles`, `bouteille_catalogue`
-- **Tables de référence** : `pays`, `type_vin`
-- **Relations** : Un utilisateur peut avoir plusieurs celliers, un cellier contient plusieurs bouteilles
-
-### Conventions de code
-- **Backend** : Code en français (commentaires, variables, fonctions)
-- **Frontend** : Code JavaScript en français lorsque possible
-- **Routes** : Noms en anglais (convention Laravel)
-- **Vues** : Blade templates avec composants réutilisables
-
-### Améliorations futures
-- Normalisation de la table `regions` (actuellement stockée comme string)
-- Filtres avancés par région, millésime, prix
-- Export/import de celliers
-- Partage de celliers entre utilisateurs

@@ -115,7 +115,7 @@ if (boutonFermer && panneauCellier) {
                 count.textContent = "Aucune bouteille";
                 count.classList.add("text-gray-400", "italic");
             } else {
-                count.textContent = `${cellier.total_bouteilles} Bouteille${
+                count.textContent = `${cellier.total_bouteilles} bouteille${
                     cellier.total_bouteilles > 1 ? "s" : ""
                 }`;
             }

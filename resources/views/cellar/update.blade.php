@@ -1,11 +1,11 @@
 @extends('layouts.app')
-@section('title', 'Modifier Celliers')
+@section('title', 'Modifier le cellier')
 
 {{-- Formulaire de modification d'un cellier --}}
 @section('content')
     <section class="p-4 pt-2" aria-label="Modification du cellier">
         {{-- Insertion du composant d'en-tête de page --}}
-        <x-page-header title="Modifier Celliers" />
+        <x-page-header title="Modifier le cellier" />
         <div class="mt-6">
             {{-- Formulaire de modification d'un cellier --}}
             <form 
