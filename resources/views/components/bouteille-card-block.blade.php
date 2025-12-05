@@ -117,7 +117,6 @@
                 >
                     {{ $quantite ?? 1 }}
                 </div>
-
                 {{-- Bouton + --}}
                 <button
                     type="button"

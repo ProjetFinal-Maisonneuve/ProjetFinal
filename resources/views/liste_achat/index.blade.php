@@ -67,7 +67,7 @@
                     </span>
                 </div>
 
-                <p class="font-semibold text-gray-900 text-sm leading-tight line-clamp-2">
+                <p class="flex-1 font-semibold text-gray-900 text-sm leading-tight line-clamp-2">
                     {{ $b->nom }}
                 </p>
 
@@ -78,7 +78,7 @@
                 </p>
 
                 {{-- prix / quantité / sous-total --}}
-                <div class="mt-2 space-y-1 text-xs">
+                <div class="flex flex-col gap-2 text-xs">
                     <p class="text-gray-600">
                         Prix : <span class="font-semibold">{{ number_format($b->prix, 2, ',', ' ') }} $</span>
                     </p>
