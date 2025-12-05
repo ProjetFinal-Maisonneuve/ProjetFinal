@@ -18,27 +18,32 @@ class ListeAchatController extends Controller
      */
     public function index()
     {
-        $items = auth()->user()
+        $user = auth()->user();
+
+        $items = $user
             ->listeAchat()
             ->with('bouteilleCatalogue')
             ->orderBy('achete')
             ->orderBy('date_ajout', 'desc')
             ->paginate(10);
 
-        $allItems = auth()->user()
+        $allItems = $user
             ->listeAchat()
             ->with('bouteilleCatalogue')
             ->get();
 
+        // Totaux
         $totalPrice = $allItems->sum(function ($item) {
             if (!$item->bouteilleCatalogue) {
                 return 0;
             }
             return (float)($item->bouteilleCatalogue->prix ?? 0) * (int)($item->quantite ?? 0);
         });
-        $totalItem = $allItems->sum(fn($item) => (int)($item->quantite ?? 0));
-        $avgPrice = $allItems->count() ? $totalPrice / $allItems->count() : 0;
 
+        $totalItem = $allItems->sum(fn($item) => (int)($item->quantite ?? 0));
+        $avgPrice  = $allItems->count() ? $totalPrice / $allItems->count() : 0;
+
+        // Filtres (pays, type, etc.)
         $pays = Pays::all();
         $types = TypeVin::all();
         $regions = Region::all();
@@ -48,9 +53,80 @@ class ListeAchatController extends Controller
             ->orderBy('millesime', 'desc')
             ->get();
 
+        /*
+         * 🔸 NOUVEAU : construire une map pour savoir si une bouteille
+         * de la liste d’achat existe déjà dans un cellier de l’utilisateur.
+         *
+         *  cellerMap[ id_bouteille_catalogue ] = [
+         *      'cellier_id'   => ...,
+         *      'bouteille_id' => ...   // id dans la table bouteilles
+         *  ]
+         */
 
-        return view('liste_achat.index', compact('items', 'totalPrice', 'totalItem', 'avgPrice', 'pays', 'types', 'regions', 'millesimes'));
+        // 1) Récupérer tous les id de bouteilles catalogue de la liste d'achat
+        $catalogueIds = $allItems
+            ->pluck('bouteille_catalogue_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        $cellarMap = [];
+
+        if ($catalogueIds->isNotEmpty()) {
+
+            // 2) Charger ces bouteilles catalogue (avec leur code SAQ / code_saQ)
+            $catalogues = BouteilleCatalogue::whereIn('id', $catalogueIds)
+                ->get()
+                ->keyBy('id');
+
+            // 3) Récupérer tous les codes SAQ de ces bouteilles catalogue
+            //    (⚠ adapte ici si ton champ s'appelle 'code_saq' au lieu de 'code_saQ')
+            $codesSaq = $catalogues
+                ->pluck('code_saQ')   // ou 'code_saq' selon ton modèle
+                ->filter()
+                ->unique()
+                ->values();
+
+            if ($codesSaq->isNotEmpty()) {
+                // 4) Chercher les bouteilles dans les celliers de l'utilisateur qui ont ces codes SAQ
+                $bouteillesCellier = Bouteille::query()
+                    ->whereIn('code_saq', $codesSaq)
+                    ->whereHas('cellier', function ($q) use ($user) {
+                        $q->where('user_id', $user->id);
+                    })
+                    ->get();
+
+                // Indexer par code_saq pour accès rapide
+                $bottlesByCode = $bouteillesCellier->keyBy('code_saq');
+
+                // 5) Construire la map catalogue_id => [cellier_id, bouteille_id]
+                foreach ($catalogues as $catalogueId => $catalogue) {
+                    $code = $catalogue->code_saQ; // ou code_saq
+                    if ($code && isset($bottlesByCode[$code])) {
+                        $bouteilleCellier = $bottlesByCode[$code];
+
+                        $cellarMap[$catalogueId] = [
+                            'cellier_id'   => $bouteilleCellier->cellier_id,
+                            'bouteille_id' => $bouteilleCellier->id,
+                        ];
+                    }
+                }
+            }
+        }
+
+        return view('liste_achat.index', compact(
+            'items',
+            'totalPrice',
+            'totalItem',
+            'avgPrice',
+            'pays',
+            'types',
+            'regions',
+            'millesimes',
+            'cellarMap',   // 🔸 on l’envoie à la vue
+        ));
     }
+
 
     /**
      * Ajoute une bouteille à la liste d'achat
@@ -224,9 +300,11 @@ class ListeAchatController extends Controller
 
     public function search(Request $request)
     {
+        $user = auth()->user();
+
         $query = ListeAchat::select('liste_achat.*')
             ->join('bouteille_catalogue', 'liste_achat.bouteille_catalogue_id', '=', 'bouteille_catalogue.id')
-            ->where('liste_achat.user_id', auth()->id())
+            ->where('liste_achat.user_id', $user->id)
             ->with('bouteilleCatalogue');
 
         if ($request->search) {
@@ -272,13 +350,44 @@ class ListeAchatController extends Controller
         }
 
         $items = $query->paginate(10);
-
         $count = $items->total();
 
+        // 🔹 Construire le $cellarMap pour savoir si chaque bouteille est déjà dans un cellier
+        $cellarMap = [];
+
+        // Tous les celliers de l’utilisateur
+        $cellierIds = $user->celliers()->pluck('id');
+
+        foreach ($items as $item) {
+            $b = $item->bouteilleCatalogue;
+
+            if (!$b) {
+                continue;
+            }
+
+            // Chercher une bouteille dans UN des celliers de l'utilisateur
+            $bouteilleCellier = Bouteille::whereIn('cellier_id', $cellierIds)
+                ->where('nom', $b->nom)
+                ->first();
+
+            if ($bouteilleCellier) {
+                // clé = id de bouteille_catalogue (même que $item->bouteille_catalogue_id)
+                $cellarMap[$item->bouteille_catalogue_id] = [
+                    'cellier_id'   => $bouteilleCellier->cellier_id,
+                    'bouteille_id' => $bouteilleCellier->id,
+                ];
+            }
+        }
+
         return response()->json([
-            'html' => view('liste_achat._liste_achat_list', compact('items', 'count'))->render()
+            'html' => view('liste_achat._liste_achat_list', [
+                'items'     => $items,
+                'count'     => $count,
+                'cellarMap' => $cellarMap, 
+            ])->render()
         ]);
     }
+
     // Suggestions de recherche pour l'autocomplétion
     public function suggest(Request $request)
     {
