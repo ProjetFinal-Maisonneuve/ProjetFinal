@@ -19,7 +19,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            let value = parseInt(display.textContent);
+            const oldValue = parseInt(display.textContent);
+            let value = oldValue;
 
             // Up / Down
             if (btn.dataset.direction === "up") {
@@ -29,8 +30,22 @@ document.addEventListener("DOMContentLoaded", () => {
                 value--;
             }
 
-            // Mise à jour visuelle immédiate
-            display.textContent = value;
+            // Afficher le spinner pendant le chargement
+            const spinnerTemplate = document.getElementById("spinner-inline-template");
+            if (spinnerTemplate) {
+                const clone = spinnerTemplate.content.cloneNode(true);
+                display.innerHTML = "";
+                display.appendChild(clone);
+            } else {
+                // Fallback si le template n'existe pas
+                display.innerHTML = `
+                    <div 
+                        class="inline-block w-6 h-6 border-2 border-neutral-200 border-t-primary rounded-full animate-spin" 
+                        role="status" 
+                        aria-label="Loading..."
+                    ></div>
+                `;
+            }
 
             // Construction FormData pour Laravel
             const formData = new FormData();
@@ -48,12 +63,20 @@ document.addEventListener("DOMContentLoaded", () => {
             })
             .then(res => {
                 if (res.ok) {
+                    // Mettre à jour l'affichage avec la nouvelle valeur
+                    display.textContent = value;
                     showToast("Quantité mise à jour", "success");
                 } else {
+                    // Restaurer l'ancienne valeur en cas d'erreur
+                    display.textContent = oldValue;
                     showToast("Erreur lors de la mise à jour", "error");
                 }
             })
-            .catch(() => showToast("Erreur réseau", "error"));
+            .catch(() => {
+                // Restaurer l'ancienne valeur en cas d'erreur réseau
+                display.textContent = oldValue;
+                showToast("Erreur réseau", "error");
+            });
         });
     });
 
