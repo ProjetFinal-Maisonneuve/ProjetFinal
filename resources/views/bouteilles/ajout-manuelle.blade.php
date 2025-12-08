@@ -10,6 +10,7 @@
             <x-page-header 
                 title="Ajout manuel d’une bouteille" 
                 undertitle="Remplissez le formulaire ci-dessous pour ajouter une bouteille manuellement à votre cellier." 
+                marginTop="mb-0"
             />
 
             {{-- Formulaire --}}
