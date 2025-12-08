@@ -386,7 +386,7 @@ class CellierController extends Controller
 
         $donnees = [
             'nom'              => $bouteille->nom,
-            'pays'             => $bouteille->pays,
+            'pays'             => $bouteille->pays ?: null,
             'prix'             => $bouteille->prix,
             'quantite'         => $bouteille->quantite,
             'date_ajout'       => $bouteille->created_at,
@@ -396,6 +396,7 @@ class CellierController extends Controller
             'image'            => null,
             'note_degustation' => $bouteille->note_degustation,
             'rating'           => $bouteille->rating,
+            'code_saq'         => $bouteille->code_saq, // Include code_saq from bouteille
         ];
 
         if ($bouteilleCatalogue) {
@@ -404,11 +405,19 @@ class CellierController extends Controller
             $donnees['millesime'] = $bouteilleCatalogue->millesime ?? $donnees['millesime'];
             $donnees['image']     = $bouteilleCatalogue->image;
             $donnees['url_saq']   = $bouteilleCatalogue->url_saq;
+            $donnees['code_saq']  = $bouteilleCatalogue->code_saQ; // Use catalogue code_saq if found
 
-            if (!$donnees['pays'] && $bouteilleCatalogue->pays) {
+            // Use catalogue volume/format if available
+            if ($bouteilleCatalogue->volume) {
+                $donnees['format'] = $bouteilleCatalogue->volume;
+            }
+
+            // Use catalogue pays if bouteille doesn't have one, or always prefer catalogue if available
+            if ($bouteilleCatalogue->pays) {
                 $donnees['pays'] = $bouteilleCatalogue->pays->nom;
             }
 
+            // Always set region from catalogue if available
             if ($bouteilleCatalogue->region) {
                 $donnees['region'] = $bouteilleCatalogue->region->nom;
             }

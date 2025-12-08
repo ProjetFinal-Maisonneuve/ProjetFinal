@@ -109,6 +109,27 @@
                     {{-- 2. Grid de Détails --}}
                     <div class="grid grid-cols-2 gap-y-6 gap-x-4 mb-8">
 
+                        @if(isset($donnees['type']) && $donnees['type'])
+                        <div>
+                            <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Type</span>
+                            <span class="text-gray-900 font-medium">{{ $donnees['type'] }}</span>
+                        </div>
+                        @endif
+
+                        @if($donnees['pays'])
+                        <div>
+                            <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Pays</span>
+                            <span class="text-gray-900 font-medium">{{ $donnees['pays'] }}</span>
+                        </div>
+                        @endif
+
+                        @if(isset($donnees['region']) && $donnees['region'])
+                        <div>
+                            <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Région</span>
+                            <span class="text-gray-900 font-medium">{{ $donnees['region'] }}</span>
+                        </div>
+                        @endif
+
                         @if($donnees['millesime'])
                         <div>
                             <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Millésime</span>
@@ -116,21 +137,21 @@
                         </div>
                         @endif
 
-                        @if($donnees['format'])
+                        @if(isset($donnees['format']) && $donnees['format'])
                         <div>
                             <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">{{ $isCatalogue ? 'Volume' : 'Format' }}</span>
                             <span class="text-gray-900 font-medium">{{ $donnees['format'] }}</span>
                         </div>
                         @endif
 
-                        @if($isCatalogue && isset($donnees['code_saq']) && $donnees['code_saq'])
+                        @if(isset($donnees['code_saq']) && $donnees['code_saq'])
                         <div>
                             <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Code SAQ</span>
                             <span class="font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded text-sm inline-block">{{ $donnees['code_saq'] }}</span>
                         </div>
                         @endif
 
-                        {{-- Lien SAQ.com --}}
+                        {{-- Lien SAQ.com (pour catalogue et bouteilles du cellier avec code_saq) --}}
                         @if(isset($donnees['url_saq']) && $donnees['url_saq'])
                         <div class="col-span-2">
                             <span class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Voir sur SAQ.com</span>
