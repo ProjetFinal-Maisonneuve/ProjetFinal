@@ -10,7 +10,15 @@
     <x-page-header
         title="Ma liste d’achat"
         undertitle="Planifiez vos futurs achats de bouteilles en ajoutant des articles à votre liste d’achat." />
-
+    <x-search-filter 
+            :pays="$pays" 
+            :types="$types" 
+            :regions="$regions" 
+            :millesimes="$millesimes" 
+            url="/liste-achat/search" 
+            suggestionUrl="/liste-achat/suggest"
+            containerID="listeAchatContainer" 
+        />
     {{-- État vide --}}
     @if ($items->isEmpty())
         <x-empty-state
@@ -21,159 +29,12 @@
     @endif
 
     {{-- Liste d’achat --}}
-    <section class="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-        @foreach ($items as $item)
-            @php
-                $b = $item->bouteilleCatalogue ?? null;
-
-                // URL par défaut : fiche catalogue
-                $targetUrl = $b ? route('catalogue.show', $b->id) : '#';
-
-                if ($b) {
-                    // Chercher si cette bouteille existe déjà dans un cellier de l'utilisateur
-                    $cellierBottleQuery = \App\Models\Bouteille::query()
-                        ->whereHas('cellier', function ($q) {
-                            $q->where('user_id', auth()->id());
-                        });
-
-                    if (!empty($b->code_saQ)) {
-                        // Si on a un code SAQ, on matche dessus
-                        $cellierBottleQuery->where('code_saq', $b->code_saQ);
-                    } else {
-                        // Sinon, fallback sur le nom
-                        $cellierBottleQuery->where('nom', $b->nom);
-                    }
-
-                    $cellierBottle = $cellierBottleQuery->first();
-
-                    if ($cellierBottle) {
-                        // Si la bouteille existe dans un cellier, on envoie vers la fiche cellier
-                        $targetUrl = route('bouteilles.show', [$cellierBottle->cellier_id, $cellierBottle->id]);
-                    }
-                }
-            @endphp
-
-            <div
-                class="wishlist-card relative flex flex-col rounded-2xl border border-gray-200 bg-white/80 shadow-sm 
-                       hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden"
-                data-target-url="{{ $targetUrl }}"
-            >
-
-                {{-- Menu (3 points) --}}
-                <div class="wishlist-card-actions">
-                    <x-dropdown-action
-                        :id="$item->id"
-                        :item="$item"
-                        deleteUrl="{{ route('listeAchat.destroy', $item) }}"
-                        transferUrl="{{ route('listeAchat.transfer', $item) }}" />
-                </div>
-
-                {{-- Image (NE PAS TOUCHER) --}}
-                <div class="max-h-[160px] bg-gray-200 border-b border-gray-100 flex items-center justify-center 
-                            overflow-hidden aspect-3/4 py-3">
-                    @if ($b && ($b->thumbnail ?? $b->image))
-                        <img src="{{ $b->thumbnail ?? $b->image }}"
-                            alt="Image {{ $b->nom }}"
-                            class="max-w-[96px] max-h-[160px] object-contain">
-                    @else
-                        <x-dynamic-component
-                            :component="'lucide-wine'"
-                            class="w-7 h-7 text-primary/60" />
-                    @endif
-                </div>
-
-                {{-- Texte --}}
-                <div class="flex-1 p-4 flex flex-col gap-2">
-
-                    {{-- Marquer comme acheté --}}
-                    <div class="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            class="wishlist-check-achete no-card-click"
-                            data-url="{{ route('listeAchat.update', $item) }}"
-                            data-item-id="{{ $item->id }}"
-                            @checked($item->achete)
-                        >
-                        <span class="{{ $item->achete ? 'line-through text-gray-400' : '' }} text-xs font-medium">
-                            Acheté
-                        </span>
-                    </div>
-
-                    <p class="flex-1 font-semibold text-gray-900 text-sm leading-tight line-clamp-2">
-                        {{ $b->nom ?? 'Bouteille inconnue' }}
-                    </p>
-
-                    {{-- pays + format --}}
-                    <p class="text-xs text-gray-500">
-                        {{ optional($b->pays)->nom ?? 'Pays inconnu' }} —
-                        {{ $b->volume ?? 'Format inconnu' }}
-                    </p>
-
-                    {{-- prix / quantité / sous-total --}}
-                    <div class="flex flex-col gap-2 text-xs">
-                        <p class="text-gray-600">
-                            Prix :
-                            <span class="font-semibold">
-                                {{ $b ? number_format($b->prix, 2, ',', ' ') : '0,00' }} $
-                            </span>
-                        </p>
-
-                        <p class="text-gray-700">
-                            Sous-total :
-                            <span class="font-semibold">
-                                {{ $b ? number_format($b->prix * $item->quantite, 2, ',', ' ') : '0,00' }} $
-                            </span>
-                        </p>
-
-                        {{-- CONTRÔLE QUANTITÉ --}}
-                        <div
-                            class="flex items-center justify-between bg-neutral-50 border border-border-base rounded-full 
-                                   p-0.5 sm:p-1 shadow-sm w-full max-w-[120px] sm:max-w-[150px]">
-
-                            {{-- Bouton - --}}
-                            <button
-                                type="button"
-                                class="wishlist-qty-btn no-card-click flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full 
-                                       text-text-muted hover:text-danger hover:bg-white hover:shadow-sm transition-all duration-200 
-                                       active:scale-95"
-                                data-direction="down"
-                                data-url="{{ route('listeAchat.update', $item) }}"
-                                data-item-id="{{ $item->id }}">
-                                <x-dynamic-component :component="'lucide-minus'" class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            </button>
-
-                            {{-- Affichage quantité --}}
-                            <div
-                                class="wishlist-qty-display text-xs sm:text-sm font-bold text-text-heading text-center select-none px-1"
-                                data-item-id="{{ $item->id }}"
-                                data-url="{{ route('listeAchat.update', $item) }}">
-                                {{ $item->quantite }}
-                            </div>
-
-                            {{-- Bouton + --}}
-                            <button
-                                type="button"
-                                class="wishlist-qty-btn no-card-click flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full 
-                                       text-text-muted hover:text-primary hover:bg-white hover:shadow-sm transition-all duration-200 
-                                       active:scale-95"
-                                data-direction="up"
-                                data-url="{{ route('listeAchat.update', $item) }}"
-                                data-item-id="{{ $item->id }}">
-                                <x-dynamic-component :component="'lucide-plus'" class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                            </button>
-
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        @endforeach
+    <section id="listeAchatContainer" class="mt-4">
+        @include('liste_achat._liste_achat_list', [
+            'items' => $items,
+            'count' => $items->total(),
+        ])
     </section>
-
-    {{-- Pagination --}}
-    <div class="mt-6 flex-1 w-full ">
-        {{ $items->links() }}
-    </div>
 
     {{-- Total --}}
     @if (!$items->isEmpty())
@@ -189,7 +50,7 @@
                     {{-- Nombre total de bouteilles --}}
                     <div class="flex flex-col items-center justify-center bg-gray-50 rounded-xl py-4 px-3 border border-gray-100">
                         <span class="text-sm text-gray-500">Nombre de bouteilles</span>
-                        <span class="text-2xl font-bold text-gray-900">
+                        <span id="totalItemContainer" class="text-2xl font-bold text-gray-900">
                             {{ $totalItem }}
                         </span>
                     </div>
@@ -197,7 +58,7 @@
                     {{-- Prix moyen --}}
                     <div class="flex flex-col items-center justify-center bg-gray-50 rounded-xl py-4 px-3 border border-gray-100">
                         <span class="text-sm text-gray-500 whitespace-nowrap">Prix moyen / bouteille</span>
-                        <span class="text-2xl font-bold text-gray-900">
+                        <span id="averagePriceContainer"  class="text-2xl font-bold text-gray-900">
                             {{ number_format($avgPrice, 2, ',', ' ') }} $
                         </span>
                     </div>
@@ -205,7 +66,7 @@
                     {{-- Total --}}
                     <div class="flex flex-col items-center justify-center bg-gray-50 rounded-xl py-4 px-3 border border-gray-100">
                         <span class="text-sm text-gray-500">Total estimé</span>
-                        <span class="text-2xl font-bold text-gray-900">
+                        <span id="totalPriceContainer"  class="text-2xl font-bold text-gray-900">
                             {{ number_format($totalPrice, 2, ',', ' ') }} $
                         </span>
                     </div>
@@ -216,32 +77,5 @@
         </div>
     @endif
 </div>
-
-{{-- Script : rendre la carte cliquable sans casser les boutons --}}
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.wishlist-card').forEach(function (card) {
-        var url = card.dataset.targetUrl;
-        if (!url || url === '#') return;
-
-        card.addEventListener('click', function (e) {
-            var target = e.target;
-
-            // Ne pas rediriger si on clique sur :
-            // - les boutons +/- (classe no-card-click)
-            // - la checkbox "Acheté"
-            // - la zone du menu (3 points)
-            if (
-                target.closest('.no-card-click') ||
-                target.closest('.wishlist-card-actions')
-            ) {
-                return;
-            }
-
-            window.location.href = url;
-        });
-    });
-});
-</script>
 
 @endsection

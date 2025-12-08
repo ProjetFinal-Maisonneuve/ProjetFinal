@@ -55,7 +55,7 @@
 
                 {{-- Image cliquable (vers fiche produit : cellier OU catalogue) --}}
                 <a href="{{ $detailUrl }}" aria-label="Voir les détails de {{ $b->nom }}">
-                    <div class="max-h-[160px] bg-gray-200 border-b border-gray-100 flex items-center justify-center 
+                    <div class="max-h-[160px] w-full bg-gray-200 border-b border-gray-100 flex items-center justify-center 
                                 overflow-hidden aspect-3/4 py-3">
                         @if ($b->thumbnail ?? $b->image)
                             <img src="{{ $b->thumbnail ?? $b->image }}"

@@ -245,8 +245,6 @@ function bindPaginationLinks() {
         });
     });
 }
-
-// Bind initial
-if (container) {
-    bindPaginationLinks();
-}
+document.addEventListener("DOMContentLoaded", () => {
+    if (container) bindPaginationLinks();
+});
