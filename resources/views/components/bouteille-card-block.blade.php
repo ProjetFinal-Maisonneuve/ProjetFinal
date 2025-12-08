@@ -52,11 +52,21 @@
         <a href="{{ route('bouteilles.show', [$cellierId, $bouteilleId]) }}" class="flex flex-col" aria-label="Voir les détails de {{ $nom }}">
     @endif
     
-    <picture class='w-full h-32 overflow-hidden bg-neutral-400 flex items-center justify-center cursor-pointer'>
+    <picture class='w-full h-32 overflow-hidden bg-neutral-400 flex items-center justify-center cursor-pointer relative'>
         @if ($image === null)
         <svg  version="1.0" xmlns="http://www.w3.org/2000/svg"  width="90.000000pt" height="90.000000pt" viewBox="0 0 300.000000 300.000000"  preserveAspectRatio="xMidYMid meet">  <g transform="translate(0.000000,300.000000) scale(0.050000,-0.050000)" fill="#757575" stroke="none"> <path d="M2771 5765 c-8 -19 -13 -325 -12 -680 3 -785 6 -767 -189 -955 -231 -222 -214 -70 -225 -2018 -10 -1815 -11 -1791 100 -1831 215 -77 1028 -70 1116 10 73 66 77 168 80 1839 4 1928 18 1815 -254 2058 -141 126 -147 164 -147 878 0 321 -6 618 -13 659 l-12 75 -215 0 c-187 0 -218 -5 -229 -35z"/> </g> </svg> 
         @else
-            <img src='{{ $image }}' alt='Bouteille {{ $nom }}' class='w-full h-full object-contain object-center hover:scale-105 transition-transform duration-300'/>
+            {{-- Loading spinner --}}
+            <div class="bottle-image-loader absolute inset-0 flex items-center justify-center bg-neutral-400 z-10">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+            <img 
+                src='{{ $image }}' 
+                alt='Bouteille {{ $nom }}' 
+                class='w-full h-full object-contain object-center hover:scale-105 transition-transform duration-300 bottle-image opacity-0'
+                onload="this.classList.remove('opacity-0'); this.classList.add('opacity-100'); this.parentElement.querySelector('.bottle-image-loader')?.classList.add('hidden')"
+                onerror="this.parentElement.querySelector('.bottle-image-loader')?.classList.add('hidden')"
+            />
         @endif
     </picture>
     
@@ -169,7 +179,7 @@
         @endif
 
         {{-- Bouton d'ajout à la liste d'achat (mode cellier) --}}
-        @if($isCellierMode)
+        @if($isCellierMode && !empty($codeSaq))
         <button 
             type="button"
             class="add-to-wishlist-cellar flex items-center justify-center absolute top-10 right-1 
