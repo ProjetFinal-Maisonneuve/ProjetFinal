@@ -246,6 +246,128 @@ class ListeAchatController extends Controller
     }
 
     /**
+     * Transférer toutes les bouteilles de la liste d'achat vers un cellier
+     */
+    public function transferAll(Request $request)
+    {
+        $request->validate([
+            'cellier_id' => 'required|exists:celliers,id',
+        ]);
+
+        $user = auth()->user();
+        $cellierId = $request->cellier_id;
+
+        // Vérifier que le cellier appartient à l'utilisateur
+        $cellier = $user->celliers()->find($cellierId);
+
+        if (!$cellier) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cellier non trouvé ou vous n\'avez pas accès à ce cellier.',
+            ], 403);
+        }
+
+        // Récupérer tous les items de la liste d'achat
+        $items = $user->listeAchat()->with('bouteilleCatalogue')->get();
+
+        if ($items->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Votre liste d\'achat est vide.',
+            ], 404);
+        }
+
+        $transferredCount = 0;
+        $errors = [];
+
+        foreach ($items as $item) {
+            $bouteilleCatalogue = $item->bouteilleCatalogue;
+
+            if (!$bouteilleCatalogue) {
+                // Si la bouteille catalogue n'existe plus, supprimer l'item
+                $item->delete();
+                continue;
+            }
+
+            // Charger les relations si elles ne sont pas déjà chargées
+            if (!$bouteilleCatalogue->relationLoaded('pays')) {
+                $bouteilleCatalogue->load('pays');
+            }
+            if (!$bouteilleCatalogue->relationLoaded('typeVin')) {
+                $bouteilleCatalogue->load('typeVin');
+            }
+
+            $quantite = $item->quantite;
+
+            // Vérifier si la bouteille existe déjà dans ce cellier
+            $bouteilleExistante = Bouteille::where('cellier_id', $cellierId)
+                ->where('nom', $bouteilleCatalogue->nom)
+                ->first();
+
+            try {
+                if ($bouteilleExistante) {
+                    // Augmenter la quantité si la bouteille existe déjà
+                    $bouteilleExistante->quantite += $quantite;
+                    // Mettre à jour le code_saq si ce n'est pas déjà défini
+                    if (empty($bouteilleExistante->code_saq) && !empty($bouteilleCatalogue->code_saQ)) {
+                        $bouteilleExistante->code_saq = $bouteilleCatalogue->code_saQ;
+                    }
+                    $bouteilleExistante->save();
+                } else {
+                    // Créer une nouvelle bouteille dans le cellier
+                    $nouvelleBouteille = new Bouteille();
+                    $nouvelleBouteille->cellier_id = $cellierId;
+                    $nouvelleBouteille->nom = $bouteilleCatalogue->nom;
+                    $nouvelleBouteille->pays = $bouteilleCatalogue->pays ? $bouteilleCatalogue->pays->nom : null;
+                    $nouvelleBouteille->format = $bouteilleCatalogue->volume;
+                    $nouvelleBouteille->quantite = $quantite;
+                    $nouvelleBouteille->prix = $bouteilleCatalogue->prix;
+                    $nouvelleBouteille->code_saq = $bouteilleCatalogue->code_saQ;
+
+                    // Ajouter type et millésime si disponibles
+                    if ($bouteilleCatalogue->typeVin) {
+                        $nouvelleBouteille->type = $bouteilleCatalogue->typeVin->nom;
+                    }
+                    if ($bouteilleCatalogue->millesime) {
+                        $nouvelleBouteille->millesime = $bouteilleCatalogue->millesime;
+                    }
+
+                    $nouvelleBouteille->save();
+                }
+
+                // Supprimer de la liste d'achat
+                $item->delete();
+                $transferredCount++;
+            } catch (\Exception $e) {
+                $errors[] = "Erreur lors du transfert de {$bouteilleCatalogue->nom}: " . $e->getMessage();
+            }
+        }
+
+        if ($transferredCount > 0) {
+            $message = $transferredCount === 1 
+                ? "1 bouteille a été transférée dans votre cellier."
+                : "{$transferredCount} bouteilles ont été transférées dans votre cellier.";
+
+            if (!empty($errors)) {
+                $message .= " " . count($errors) . " erreur(s) rencontrée(s).";
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'transferred_count' => $transferredCount,
+                'errors' => $errors,
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Aucune bouteille n\'a pu être transférée.',
+            'errors' => $errors,
+        ], 500);
+    }
+
+    /**
      * Modifier quantité ou statut acheté
      */
     public function update(Request $request, ListeAchat $item)
@@ -295,7 +417,40 @@ class ListeAchatController extends Controller
     {
         $item->delete();
 
-        return back()->with('success', 'Élément supprimé de votre liste d’achat.');
+        return back()->with('success', "Élément supprimé de votre liste d'achat.");
+    }
+
+    /**
+     * Supprimer toutes les bouteilles de la liste d'achat de l'utilisateur
+     */
+    public function destroyAll()
+    {
+        $user = auth()->user();
+        
+        $count = $user->listeAchat()->count();
+        
+        if ($count > 0) {
+            $user->listeAchat()->delete();
+            
+            if (request()->expectsJson() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "Toutes les bouteilles ont été supprimées de votre liste d'achat.",
+                    'count' => $count
+                ]);
+            }
+            
+            return back()->with('success', "Toutes les bouteilles ont été supprimées de votre liste d'achat.");
+        }
+        
+        if (request()->expectsJson() || request()->wantsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => "Votre liste d'achat est déjà vide.",
+            ], 404);
+        }
+        
+        return back()->with('info', "Votre liste d'achat est déjà vide.");
     }
 
     public function search(Request $request)
