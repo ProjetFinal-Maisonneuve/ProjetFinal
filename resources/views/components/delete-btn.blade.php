@@ -1,55 +1,52 @@
 @props([
     'route'   => null,
-    'id'      => null,
-    'label'   => null,          // texte optionnel (ex. "Supprimer")
-    'variant' => 'icon',        // "icon" (ancien comportement) ou "menu"
+    'label'   => null,
+    'variant' => 'icon', // "icon" ou "menu"
 ])
 
 @php
-    // Détermination du href / action
-    $action = $route;
+    // --- 1. Base commune ---
+    // "use-confirm" est essentiel pour ton script JS
+    $base = "use-confirm inline-flex items-center justify-center transition-all duration-300 cursor-pointer";
 
-    // Classes du bouton selon la variante
-    $base = "inline-flex items-center justify-center transition-all duration-300";
-
+    // --- 2. Logique des variantes ---
     if ($variant === 'menu') {
-        // Style petite pastille blanche comme ton exemple "Supprimer"
+        // === VARIANT MENU (Ton nouveau design) ===
+        // Fond rouge (bg-danger), texte blanc, pleine largeur
         $classes = $base .
-            " w-full px-4 py-2 rounded-xl bg-white text-danger text-sm " .
-            "shadow-md border border-border-base hover:bg-red-50 hover:text-red-700";
+            " w-full px-4 py-3 rounded-lg bg-danger text-white text-sm " .
+            "shadow-md border border-border-base hover:bg-red-500";
+            
+        // L'icône doit être blanche sur fond rouge -> 'stroke-current' prend la couleur du texte
+        $iconClass = "w-5 h-5 stroke-current mr-2"; 
+        
     } else {
-        // Ancien style : petit bouton rond avec icône poubelle
+        // === VARIANT ICON (Ancien design conservé) ===
+        // Petit bouton discret
         $classes = $base .
             " p-2 bg-card hover:bg-card-hover rounded-lg border-border-base border " .
             "shadow-md hover:shadow-sm";
+            
+        // L'icône garde sa couleur par défaut
+        $iconClass = "w-5 h-5 stroke-text-heading";
     }
 @endphp
 
-<form
-    action="{{ $action }}"
-    method="POST"
-    @if($id) id="{{ $id }}" @endif
-    class="inline"
+<button
+    type="button"
+    class="{{ $classes }}"
+    data-action="{{ $route }}"
+    aria-label="{{ $label ?? 'Supprimer' }}"
 >
-    @csrf
-    @method('DELETE')
+    {{-- Icône --}}
+    <x-dynamic-component
+        :component="'lucide-trash-2'"
+        class="{{ $iconClass }}"
+        aria-hidden="true"
+    />
 
-    <button
-        type="button"
-        class="use-confirm {{ $classes }}"
-        data-action="{{ $action }}"
-        aria-label="{{ $label ?? 'Supprimer' }}"
-    >
-        {{-- Icône poubelle --}}
-        <x-dynamic-component
-            :component="'lucide-trash-2'"
-            class="w-5 h-5 stroke-text-heading"
-            aria-hidden="true"
-        />
-
-        {{-- Texte optionnel --}}
-        @if($label)
-            <span class="ml-2">{{ $label }}</span>
-        @endif
-    </button>
-</form>
+    {{-- Texte (Uniquement affiché si un label existe ET qu'on est en mode menu) --}}
+    @if($label && $variant === 'menu')
+        <span>{{ $label }}</span>
+    @endif
+</button>

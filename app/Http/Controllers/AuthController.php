@@ -116,6 +116,11 @@ class AuthController extends Controller
             // 3) Si connexion réussie, on régénère la session.
             $request->session()->regenerate();
 
+            $user = Auth::user();
+            $user->update([
+                'last_login_at' => now(),
+            ]);
+
             // 4) Redirection vers la page des celliers
             return redirect()
                 ->intended(route('cellar.index'))

@@ -1,10 +1,10 @@
-<?php 
+<?php
 
 namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth; 
+use Illuminate\Support\Facades\Auth;
 
 class AdminController extends Controller
 {
@@ -13,7 +13,7 @@ class AdminController extends Controller
      */
     public function index(Request $request)
     {
-        $search = $request->input('q'); 
+        $search = $request->input('q');
 
         $query = User::query()
             ->withCount('celliers')   // 👈 nombre de celliers par usager
@@ -22,7 +22,7 @@ class AdminController extends Controller
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
-                  ->orWhere('email', 'like', '%' . $search . '%');
+                    ->orWhere('email', 'like', '%' . $search . '%');
             });
         }
 
@@ -57,16 +57,16 @@ class AdminController extends Controller
 
         // Empêcher de se désactiver soi-même
         if (Auth::id() === $user->id) {
-            return redirect()
-                ->route('admin.users.index')
+            return
+                back()
                 ->with('error', 'Vous ne pouvez pas désactiver votre propre compte.');
         }
 
         $user->is_active = ! $user->is_active;
         $user->save();
 
-        return redirect()
-            ->route('admin.users.index')
+        return
+            back()
             ->with('success', 'Statut de l’usager mis à jour.');
     }
 

@@ -6,9 +6,10 @@
     {{-- AJOUT TRANSFERT --}}
     'transferUrl' => null,
     'item' => null,
+    "absolute" => true,
 ])
 
-<div class="group absolute top-0 right-0 p-2 cursor-pointer z-20 ">
+<div class="group {{ $absolute ? 'absolute top-0 right-0' : 'relative' }} p-2 cursor-pointer z-20 ">
 
     {{-- Bouton --}}
     <button class="cursor-pointer" aria-haspopup="true" aria-label="Options">
