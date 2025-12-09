@@ -56,10 +56,18 @@ if (modal && form && cancel) {
                         "X-CSRF-TOKEN": csrfToken,
                         "Accept": "application/json",
                         "Content-Type": "application/json",
+                        "X-Requested-With": "XMLHttpRequest",
                     },
                 });
 
-                const data = await response.json();
+                // Vérifier si la réponse est OK avant de parser JSON
+                let data;
+                try {
+                    data = await response.json();
+                } catch (jsonError) {
+                    // Si la réponse n'est pas du JSON, c'est probablement une erreur
+                    throw new Error(`Erreur HTTP ${response.status}: ${response.statusText}`);
+                }
 
                 if (response.ok && data.success) {
                     showToast(
@@ -87,6 +95,7 @@ if (modal && form && cancel) {
                 }
             } catch (error) {
                 console.error("Erreur:", error);
+                console.error("URL tentée:", url);
                 showToast("Erreur réseau. Veuillez réessayer.", "error");
                 if (confirmBtn) {
                     confirmBtn.disabled = false;

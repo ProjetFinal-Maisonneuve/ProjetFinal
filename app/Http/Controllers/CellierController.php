@@ -277,15 +277,25 @@ class CellierController extends Controller
      * @param Cellier $cellier Le cellier à supprimer
      * @return RedirectResponse Redirection vers la liste des celliers avec un message de succès
      */
-    public function destroy(Cellier $cellier): RedirectResponse
+    public function destroy(Cellier $cellier)
     {
         $this->authorizeCellier($cellier);
 
         $cellier->delete();
 
+        $message = 'Le cellier a été supprimé.';
+
+        // Si la requête est AJAX, retourner une réponse JSON
+        if (request()->wantsJson() || request()->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message
+            ]);
+        }
+
         return redirect()
             ->route('cellar.index')
-            ->with('success', 'Le cellier a été supprimé.');
+            ->with('success', $message);
     }
 
     /**
