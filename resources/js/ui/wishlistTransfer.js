@@ -47,11 +47,19 @@ document.addEventListener("DOMContentLoaded", () => {
                             let data = {};
 
                             try {
-                                data = await res.json();
+                                const text = await res.text();
+                                if (text) {
+                                    data = JSON.parse(text);
+                                }
                             } catch (e) {
                                 console.error("Erreur parsing JSON:", e);
-                                showToast("Erreur lors du transfert", "error");
-                                return;
+                                if (res.status === 404) {
+                                    data = { success: false, message: "La bouteille n'existe plus." };
+                                } else if (res.status === 403) {
+                                    data = { success: false, message: "Vous n'avez pas accès à cette bouteille." };
+                                } else {
+                                    data = { success: false, message: "Erreur lors du transfert" };
+                                }
                             }
 
                             if (res.ok && data.success) {
@@ -59,6 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                     data.message || "Transfert réussi",
                                     "success"
                                 );
+                                // Recharger la page après un court délai pour mettre à jour l'affichage
                                 setTimeout(() => location.reload(), 1000);
                             } else {
                                 showToast(
@@ -289,13 +298,19 @@ document.addEventListener("DOMContentLoaded", () => {
                                 let data = {};
 
                                 try {
-                                    data = await res.json();
+                                    const text = await res.text();
+                                    if (text) {
+                                        data = JSON.parse(text);
+                                    }
                                 } catch (e) {
                                     console.error("Erreur parsing JSON:", e);
-                                    showToast("Erreur lors du transfert", "error");
-                                    btn.disabled = false;
-                                    btn.classList.remove("opacity-50", "cursor-not-allowed");
-                                    return;
+                                    if (res.status === 404) {
+                                        data = { success: false, message: "Votre liste d'achat est vide." };
+                                    } else if (res.status === 403) {
+                                        data = { success: false, message: "Vous n'avez pas accès à ce cellier." };
+                                    } else {
+                                        data = { success: false, message: "Erreur lors du transfert" };
+                                    }
                                 }
 
                                 if (res.ok && data.success) {
@@ -303,6 +318,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                         data.message || "Transfert réussi",
                                         "success"
                                     );
+                                    // Recharger la page après un court délai pour mettre à jour l'affichage
                                     setTimeout(() => location.reload(), 1000);
                                 } else {
                                     showToast(

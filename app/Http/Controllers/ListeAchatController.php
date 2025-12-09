@@ -182,6 +182,14 @@ class ListeAchatController extends Controller
         $user = auth()->user();
         $cellierId = $request->cellier_id;
 
+        // Vérifier que l'item appartient à l'utilisateur
+        if ($item->user_id !== $user->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vous n\'avez pas accès à cette bouteille.',
+            ], 403);
+        }
+
         // Vérifier que le cellier appartient à l'utilisateur
         $cellier = $user->celliers()->find($cellierId);
 
@@ -195,6 +203,16 @@ class ListeAchatController extends Controller
         $quantite = $item->quantite;
         // Charger la bouteille du catalogue avec ses relations nécessaires
         $bouteilleCatalogue = $item->bouteilleCatalogue;
+
+        // Vérifier que la bouteille catalogue existe
+        if (!$bouteilleCatalogue) {
+            // Si la bouteille catalogue n'existe plus, supprimer l'item
+            $item->delete();
+            return response()->json([
+                'success' => false,
+                'message' => 'La bouteille du catalogue n\'existe plus. La bouteille a été supprimée de votre liste d\'achat.',
+            ], 404);
+        }
 
         // Charger les relations si elles ne sont pas déjà chargées
         if (!$bouteilleCatalogue->relationLoaded('pays')) {
@@ -245,7 +263,7 @@ class ListeAchatController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => "L'item a été transféré dans votre cellier.",
+            'message' => "La bouteille a été transférée dans votre cellier.",
         ]);
     }
 
@@ -419,9 +437,29 @@ class ListeAchatController extends Controller
      */
     public function destroy(ListeAchat $item)
     {
+        $user = auth()->user();
+
+        // Vérifier que l'item appartient à l'utilisateur
+        if ($item->user_id !== $user->id) {
+            if (request()->expectsJson() || request()->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vous n\'avez pas accès à cette bouteille.',
+                ], 403);
+            }
+            return back()->with('error', 'Vous n\'avez pas accès à cette bouteille.');
+        }
+
         $item->delete();
 
-        return back()->with('success', "Élément supprimé de votre liste d'achat.");
+        if (request()->expectsJson() || request()->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Bouteille supprimée de votre liste d'achat.",
+            ]);
+        }
+
+        return back()->with('success', "Bouteille supprimée de votre liste d'achat.");
     }
 
     /**

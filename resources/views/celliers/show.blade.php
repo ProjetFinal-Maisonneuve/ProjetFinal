@@ -134,8 +134,9 @@
                     // Premier paragraphe
                     const paragraph1 = document.createElement("p");
                     paragraph1.className = "typewriter-text-content";
+                    const fontSpecial = getComputedStyle(document.documentElement).getPropertyValue('--font-special').trim();
                     paragraph1.style.cssText = `
-                        font-family: "Caveat", cursive;
+                        font-family: ${fontSpecial || '"Caveat", cursive'};
                         font-size: 1.3rem;
                         font-weight: 500;
                         color: #7a1f3d;
@@ -150,7 +151,7 @@
                     const paragraph2 = document.createElement("p");
                     paragraph2.className = "typewriter-text-content";
                     paragraph2.style.cssText = `
-                        font-family: "Caveat", cursive;
+                        font-family: ${fontSpecial || '"Caveat", cursive'};
                         font-size: 1.3rem;
                         font-weight: 500;
                         color: #7a1f3d;
@@ -188,8 +189,8 @@
                         toast.style.bottom = (window.innerHeight - btnRect.bottom) + 'px';
                         toast.style.right = calculatedRight + 'px';
                     } else {
-                        // Fallback: bas à droite
-                        toast.style.bottom = '20px';
+                        // Fallback: bas à droite (au-dessus de la nav)
+                        toast.style.bottom = '128px';
                         toast.style.right = '20px';
                     }
                     

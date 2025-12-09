@@ -74,14 +74,22 @@ if (modal && form && cancel) {
                 });
 
                 // Vérification et parsing sécurisé du JSON
-                let data;
+                let data = {};
                 try {
-                    data = await response.json();
+                    const text = await response.text();
+                    if (text) {
+                        data = JSON.parse(text);
+                    }
                 } catch (jsonError) {
-                    // Si la réponse n'est pas JSON, on force une erreur manuelle
-                    throw new Error(
-                        `Erreur HTTP ${response.status}: ${response.statusText}`
-                    );
+                    // Si la réponse n'est pas du JSON, essayer de déterminer le message d'erreur
+                    console.error("Erreur parsing JSON:", jsonError);
+                    if (response.status === 404) {
+                        data = { success: false, message: "La bouteille n'existe plus." };
+                    } else if (response.status === 403) {
+                        data = { success: false, message: "Vous n'avez pas accès à cette bouteille." };
+                    } else {
+                        data = { success: false, message: `Erreur HTTP ${response.status}: ${response.statusText}` };
+                    }
                 }
 
                 // Gestion d'une suppression réussie
