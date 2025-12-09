@@ -59,7 +59,7 @@ window.showToast = function (message, type = "success") {
                 ${
                     isSuccess
                         ? `<path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>`
-                        : `<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M12 4h.01"/>`
+                        : `<path stroke-linecap="round" stroke-linejoin="round" d="M12 6v8m0 4h.01"/>`
                 }
             </svg>
         </div>

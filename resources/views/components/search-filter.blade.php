@@ -66,6 +66,9 @@
 
         <div class="flex justify-between items-center my-6">
             <h2 id="filter-title" class="text-xl font-bold">Options de filtre</h2>
+            <button id="closeFiltersBtn" type="button" aria-label="Fermer le panneau de filtres">
+                <x-dynamic-component :component="'lucide-x'" class="w-6 h-6 stroke-text-heading" aria-label="Fermer les options de filtre" />
+            </button>
         </div>
 
         {{-- Contenu des filtres --}}

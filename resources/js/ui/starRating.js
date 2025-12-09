@@ -3,141 +3,142 @@
  * Permet d'afficher et de modifier interactivement la note d'une bouteille
  */
 
-// Sélectionner tous les conteneurs de notation par étoiles
-const ratingContainers = document.querySelectorAll('.star-rating-container');
+// Sélectionner tous les conteneurs de notation par étoiles présents dans la page
+const ratingContainers = document.querySelectorAll(".star-rating-container");
 
-ratingContainers.forEach(container => {
-    const isEditable = container.dataset.editable === 'true';
-    const stars = container.querySelectorAll('.star-btn');
+ratingContainers.forEach((container) => {
+    // Définit si la note peut être modifiée ou non
+    const isEditable = container.dataset.editable === "true";
+
+    // Récupère toutes les étoiles cliquables
+    const stars = container.querySelectorAll(".star-btn");
+
+    // Input caché pour l'envoi de la note au serveur (formulaire)
     const hiddenInput = container.querySelector('input[type="hidden"]');
+
+    // Note maximale autorisée (par défaut 5)
     const maxRating = parseInt(container.dataset.maxRating) || 5;
+
+    // Note actuelle affichée (définie côté back)
     let currentRating = parseInt(container.dataset.rating) || 0;
-    
-    // Si ce n'est pas éditable, on ne fait rien
+
+    // Si la notation n'est pas modifiable, on ne fait rien d'autre
     if (!isEditable) {
         return;
     }
-    
-    // Initialiser l'affichage du bouton X au chargement
+
+    // Si une note existe déjà, afficher le bouton pour la supprimer
     if (currentRating > 0) {
-        const clearBtn = container.querySelector('.clear-rating-btn');
+        const clearBtn = container.querySelector(".clear-rating-btn");
         if (clearBtn) {
-            clearBtn.style.display = 'block';
+            clearBtn.style.display = "block";
         }
     }
-    
-    // Fonction pour mettre en surbrillance les étoiles
+
+    /**
+     * Colorie les étoiles de 1 à N selon la valeur donnée
+     */
     function highlightStars(starValue) {
         stars.forEach((s, i) => {
             if (i < starValue) {
-                s.classList.remove('text-gray-300');
-                s.classList.add('text-primary');
+                s.classList.remove("text-gray-300");
+                s.classList.add("text-primary"); // étoile active
             } else {
-                s.classList.remove('text-primary');
-                s.classList.add('text-gray-300');
+                s.classList.remove("text-primary");
+                s.classList.add("text-gray-300"); // étoile inactive
             }
         });
     }
-    
+
+    // Gestion des interactions pour chaque étoile
     stars.forEach((star, index) => {
-        const starValue = index + 1;
-        
-        // Survol de la souris (prévisualisation) - Desktop seulement
-        star.addEventListener('mouseenter', function() {
+        const starValue = index + 1; // 1 à 5
+
+        // Survol de souris → prévisualise la note (desktop uniquement)
+        star.addEventListener("mouseenter", function () {
             highlightStars(starValue);
         });
-        
-        // Sortie de la souris (retour à la valeur actuelle) - Desktop seulement
-        star.addEventListener('mouseleave', function() {
+
+        // Sortie de la souris → revient à la note actuelle (desktop uniquement)
+        star.addEventListener("mouseleave", function () {
             updateStarDisplay(stars, currentRating);
         });
-        
-        // Touch events pour mobile
-        star.addEventListener('touchstart', function(e) {
+
+        // Interaction tactile pour mobile → prévisualisation immédiate
+        star.addEventListener("touchstart", function (e) {
             e.preventDefault();
             highlightStars(starValue);
         });
-        
-        star.addEventListener('touchend', function(e) {
+
+        // Fin du toucher → attribue la note sélectionnée
+        star.addEventListener("touchend", function (e) {
             e.preventDefault();
             e.stopPropagation();
-            
-            // Définir la note
+
             currentRating = starValue;
             container.dataset.rating = currentRating;
-            
-            // Mettre à jour l'affichage
+
             updateStarDisplay(stars, currentRating);
-            
-            // Mettre à jour l'input caché
+
             if (hiddenInput) {
                 hiddenInput.value = currentRating;
             }
-            
-            // Mettre à jour le texte affiché
-            const ratingText = container.querySelector('span[aria-live]');
+
+            const ratingText = container.querySelector("span[aria-live]");
             if (ratingText) {
-                ratingText.textContent = currentRating + '/5';
+                ratingText.textContent = currentRating + "/5";
             }
         });
-        
-        // Clic sur une étoile (Desktop)
-        star.addEventListener('click', function(e) {
+
+        // Clic souris → attribue définitivement la note
+        star.addEventListener("click", function (e) {
             e.stopPropagation();
             e.preventDefault();
-            
+
             currentRating = starValue;
             container.dataset.rating = currentRating;
-            
-            // Mettre à jour l'affichage
+
             updateStarDisplay(stars, currentRating);
-            
-            // Mettre à jour l'input caché
+
             if (hiddenInput) {
                 hiddenInput.value = currentRating;
             }
-            
-            // Mettre à jour le texte affiché
-            const ratingText = container.querySelector('span[aria-live]');
+
+            const ratingText = container.querySelector("span[aria-live]");
             if (ratingText) {
-                ratingText.textContent = currentRating + '/5';
+                ratingText.textContent = currentRating + "/5";
             }
         });
     });
-    
-    // Gestion du bouton de suppression de l'évaluation
-    const clearBtn = container.querySelector('.clear-rating-btn');
+
+    // Bouton permettant d'effacer la note (retour à 0)
+    const clearBtn = container.querySelector(".clear-rating-btn");
     if (clearBtn) {
-        clearBtn.addEventListener('click', function(e) {
+        clearBtn.addEventListener("click", function (e) {
             e.preventDefault();
             e.stopPropagation();
-            
-            // Réinitialiser la note à 0
+
             currentRating = 0;
             container.dataset.rating = 0;
-            
-            // Mettre à jour l'affichage des étoiles
+
             updateStarDisplay(stars, 0);
-            
-            // Mettre à jour l'input caché
+
             if (hiddenInput) {
                 hiddenInput.value = 0;
             }
-            
-            // Mettre à jour le texte affiché
-            const ratingText = container.querySelector('span[aria-live]');
+
+            const ratingText = container.querySelector("span[aria-live]");
             if (ratingText) {
-                ratingText.textContent = 'Non noté';
+                ratingText.textContent = "Non noté";
             }
-            
-            // Masquer le bouton X
-            clearBtn.style.display = 'none';
+
+            clearBtn.style.display = "none";
         });
     }
 });
 
 /**
- * Met à jour l'affichage des étoiles selon la note
+ * Met à jour l'affichage visuel des étoiles en fonction de la note donnée
  * @param {NodeList} stars - Liste des boutons étoiles
  * @param {number} rating - Note actuelle (0-5)
  */
@@ -145,25 +146,22 @@ function updateStarDisplay(stars, rating) {
     stars.forEach((star, index) => {
         const starValue = index + 1;
         if (starValue <= rating) {
-            star.classList.remove('text-gray-300');
-            star.classList.add('text-primary');
+            // Étoiles actives
+            star.classList.remove("text-gray-300");
+            star.classList.add("text-primary");
         } else {
-            star.classList.remove('text-primary');
-            star.classList.add('text-gray-300');
+            // Étoiles inactives
+            star.classList.remove("text-primary");
+            star.classList.add("text-gray-300");
         }
     });
-    
-    // Afficher/masquer le bouton X selon la note
-    const container = stars[0]?.closest('.star-rating-container');
+
+    // Gestion du bouton X (effacer note)
+    const container = stars[0]?.closest(".star-rating-container");
     if (container) {
-        const clearBtn = container.querySelector('.clear-rating-btn');
+        const clearBtn = container.querySelector(".clear-rating-btn");
         if (clearBtn) {
-            if (rating > 0) {
-                clearBtn.style.display = 'block';
-            } else {
-                clearBtn.style.display = 'none';
-            }
+            clearBtn.style.display = rating > 0 ? "block" : "none";
         }
     }
 }
-

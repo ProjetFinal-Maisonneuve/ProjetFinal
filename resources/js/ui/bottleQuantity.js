@@ -1,96 +1,107 @@
-// Gestion des quantités de bouteilles dans la cave
+// Gestion des quantités de bouteilles
 function initBottleQuantity() {
-    // Sélection des boutons de quantité
+    // Sélection des boutons permettant d'augmenter ou diminuer la quantité
     const buttons = document.querySelectorAll(".qty-btn");
     if (buttons.length) {
+        // Récupération du token CSRF pour sécuriser les requêtes PATCH
         const csrfMeta = document.querySelector('meta[name="csrf-token"]');
         const csrfToken = csrfMeta ? csrfMeta.getAttribute("content") : "";
-        // Ajout des écouteurs d'événements aux boutons
+
+        // Ajout des écouteurs d'événements sur chaque bouton
         buttons.forEach((btn) => {
             btn.addEventListener("click", () => {
-            const url = btn.dataset.url;
-            const direction = btn.dataset.direction;
-            const bouteilleId = btn.dataset.bouteille;
+                // Récupération des données nécessaires au fonctionnement
+                const url = btn.dataset.url; // Route Laravel pour modifier la quantité
+                const direction = btn.dataset.direction; // Type d'action ("up" ou "down")
+                const bouteilleId = btn.dataset.bouteille; // ID de la bouteille ciblée
 
-            const display = document.querySelector(
-                `.qty-display[data-bouteille="${bouteilleId}"]`
-            );
-
-            if (!url || !direction || !display) {
-                console.error(
-                    "Données manquantes pour la mise à jour de quantité."
+                // Élément visuel affichant la quantité pour cette bouteille
+                const display = document.querySelector(
+                    `.qty-display[data-bouteille="${bouteilleId}"]`
                 );
-                return;
-            }
 
-            // Empêcher les clics multiples pendant qu'une requête est en cours
-            if (display.dataset.loading === "true") {
-                return;
-            }
+                // Vérification des données nécessaires
+                if (!url || !direction || !display) {
+                    console.error(
+                        "Données manquantes pour la mise à jour de quantité."
+                    );
+                    return;
+                }
 
-            const oldText = display.textContent;
-            
-            // Marquer comme en cours de chargement
-            display.dataset.loading = "true";
-            
-            // Indicateur de chargement (Spinner)
-            const spinnerTemplate = document.getElementById("spinner-inline-template");
-            if (spinnerTemplate) {
-                const clone = spinnerTemplate.content.cloneNode(true);
-                display.innerHTML = "";
-                display.appendChild(clone);
-            } else {
-                // Fallback if template doesn't exist
-                display.innerHTML = `
-                    <div 
-                        class="inline-block w-6 h-6 border-2 border-neutral-200 border-t-primary rounded-full animate-spin" 
-                        role="status" 
-                        aria-label="Loading..."
-                    ></div>
-                `;
-            }
-            
-            // Appel API pour mettre à jour la quantité
-            fetch(url, {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                    "X-CSRF-TOKEN": csrfToken,
-                },
-                body: JSON.stringify({ direction }),
-            })
-                .then((res) => {
-                    console.log("Réponse API quantité:", res.status);
-                    if (!res.ok) {
-                        throw new Error("Réponse serveur non OK");
-                    }
-                    return res.json();
+                // Empêcher les interactions multiples pendant une mise à jour en cours
+                if (display.dataset.loading === "true") {
+                    return;
+                }
+
+                const oldText = display.textContent; // Mémoriser l'ancienne quantité
+
+                // Indiquer qu'une mise à jour est en cours
+                display.dataset.loading = "true";
+
+                // Affichage d'un indicateur de chargement (spinner)
+                const spinnerTemplate = document.getElementById(
+                    "spinner-inline-template"
+                );
+                if (spinnerTemplate) {
+                    // Utilisation d'un template HTML si disponible
+                    const clone = spinnerTemplate.content.cloneNode(true);
+                    display.innerHTML = "";
+                    display.appendChild(clone);
+                } else {
+                    // Fallback au cas où aucun template n'existe
+                    display.innerHTML = `
+                        <div 
+                            class="inline-block w-6 h-6 border-2 border-neutral-200 border-t-primary rounded-full animate-spin" 
+                            role="status" 
+                            aria-label="Loading..."
+                        ></div>
+                    `;
+                }
+
+                // Envoi de la requête PATCH pour modifier la quantité côté serveur
+                fetch(url, {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Accept: "application/json",
+                        "X-CSRF-TOKEN": csrfToken,
+                    },
+                    body: JSON.stringify({ direction }),
                 })
-                .then((data) => {
-                    console.log("Données JSON:", data);
-                    if (data.success && typeof data.quantite !== "undefined") {
-                        display.textContent = `${data.quantite}`;
-                    } else {
-                        display.textContent = oldText;
-                    }
-                    // Réinitialiser le flag de chargement
-                    display.dataset.loading = "false";
-                })
-                .catch((err) => {
-                    console.error("Erreur quantité:", err);
-                    display.textContent = oldText;
-                    // Réinitialiser le flag de chargement en cas d'erreur
-                    display.dataset.loading = "false";
-                });
+                    .then((res) => {
+                        // Vérifie qu'une réponse valide a été reçue
+                        if (!res.ok) {
+                            throw new Error("Réponse serveur non OK");
+                        }
+                        return res.json();
+                    })
+                    .then((data) => {
+                        // Mise à jour de l'affichage selon la réponse retournée par l'API
+                        if (
+                            data.success &&
+                            typeof data.quantite !== "undefined"
+                        ) {
+                            display.textContent = `${data.quantite}`;
+                        } else {
+                            display.textContent = oldText; // Restaure si anomalie
+                        }
+
+                        // Autoriser de nouveau les interactions
+                        display.dataset.loading = "false";
+                    })
+                    .catch((err) => {
+                        // Gestion des erreurs réseau ou serveur
+                        console.error("Erreur quantité:", err);
+                        display.textContent = oldText; // Restauration de la valeur précédente
+                        display.dataset.loading = "false"; // Réactivation des interactions
+                    });
             });
         });
     }
 }
 
-// Initialisation au chargement
+// Initialisation au chargement de la page
 initBottleQuantity();
 
-// Réinitialisation après un chargement AJAX du cellier
+// Réinitialiser les listeners après un rafraîchissement AJAX du cellier
 window.addEventListener("cellierReloaded", initBottleQuantity);
-

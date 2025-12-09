@@ -7,7 +7,7 @@
 {{-- Bouton avec icône et texte --}}
 <a 
     href="{{ $href }}" 
-    class="h-24 flex items-center gap-2 py-4 px-2 sm:px-4 rounded-lg bg-card hover:bg-card-hover shadow-sm border border-border-base transition"
+    class="addWineOptionBtn h-24 flex items-center gap-2 py-4 px-2 sm:px-4 rounded-lg bg-card hover:bg-card-hover shadow-sm border border-border-base transition"
     aria-label="{{ $title }} : {{ $subtitle }}"
 >
     

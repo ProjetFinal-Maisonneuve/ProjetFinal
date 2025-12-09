@@ -6,16 +6,18 @@
  */
 
 document.addEventListener("DOMContentLoaded", function () {
+    // Éléments principaux du système de partage
     const shareBtn = document.getElementById("shareBottleBtn");
     const shareModal = document.getElementById("shareModal");
     const shareModalClose = document.getElementById("shareModalClose");
     const shareModalContent = document.getElementById("shareModalContent");
 
+    // Si les éléments n'existent pas, ne pas exécuter ce script
     if (!shareBtn || !shareModal || !shareModalClose || !shareModalContent) {
-        return; // Les éléments ne sont pas présents sur cette page
+        return;
     }
 
-    // Ouvrir le modal au clic sur le bouton Partager
+    // Ouvre le modal et lance la génération du lien de partage
     shareBtn.addEventListener("click", function () {
         const bouteilleId = this.getAttribute("data-bouteille-id");
         if (!bouteilleId) {
@@ -23,24 +25,25 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        // Afficher le modal avec un indicateur de chargement
+        // Affiche le modal et un indicateur de chargement pendant le fetch
         shareModal.classList.remove("hidden");
         shareModal.setAttribute("aria-hidden", "false");
         afficherChargement();
 
-        // Générer le lien de partage
+        // Appel au backend pour obtenir un lien partageable
         generateShareLink(bouteilleId);
     });
 
-    // Fermer le modal
+    // Ferme le modal et réinitialise son état
     function closeModal() {
         shareModal.classList.add("hidden");
         shareModal.setAttribute("aria-hidden", "true");
     }
 
+    // Bouton de fermeture du modal
     shareModalClose.addEventListener("click", closeModal);
 
-    // Afficher un message de chargement
+    // Affiche un loader dans la modale pendant le traitement de la requête
     function afficherChargement() {
         const template = document.getElementById("loading-template");
         if (!template) {
@@ -51,14 +54,14 @@ document.addEventListener("DOMContentLoaded", function () {
         shareModalContent.appendChild(clone);
     }
 
-    // Fermer le modal en cliquant en dehors
+    // Fermeture du modal au clic en dehors du contenu
     shareModal.addEventListener("click", function (e) {
         if (e.target === shareModal) {
             closeModal();
         }
     });
 
-    // Fermer le modal avec la touche Échap
+    // Fermeture via la touche Échap
     document.addEventListener("keydown", function (e) {
         if (e.key === "Escape" && !shareModal.classList.contains("hidden")) {
             closeModal();
@@ -66,7 +69,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     /**
-     * Génère un lien de partage pour une bouteille
+     * Fait une requête vers l'API pour générer un lien de partage
      */
     async function generateShareLink(bouteilleId) {
         try {
@@ -81,14 +84,17 @@ document.addEventListener("DOMContentLoaded", function () {
                 },
             });
 
+            // Parse de la réponse API
             const data = await response.json();
 
+            // Vérification des réponses invalides
             if (!response.ok) {
                 throw new Error(
                     data.message || "Erreur lors de la génération du lien"
                 );
             }
 
+            // Affiche le lien de partage s'il est valide
             if (data.success && data.url) {
                 displayShareLink(data.url);
             } else {
@@ -104,7 +110,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     /**
-     * Affiche un message d'erreur
+     * Affiche un message d'erreur dans la modale
      */
     function afficherErreur(message) {
         const template = document.getElementById("share-error-template");
@@ -119,7 +125,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     /**
-     * Affiche le lien de partage avec le bouton de copie et les boutons de partage social
+     * Affiche le lien généré + les options sociales + le bouton copier
      */
     function displayShareLink(url) {
         const template = document.getElementById("share-link-template");
@@ -127,7 +133,7 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        // Encoder l'URL pour le partage social
+        // Encodage pour les services externes (Facebook / X)
         const encodedUrl = encodeURIComponent(url);
         const shareText = encodeURIComponent(
             "Découvrez cette bouteille de vin sur Vino !"
@@ -138,7 +144,7 @@ document.addEventListener("DOMContentLoaded", function () {
         const twitterLink = clone.querySelector(".share-twitter-link");
         const shareLinkInput = clone.querySelector("#shareLinkInput");
 
-        // Définir les URLs de partage
+        // Génération des URLs de partage
         facebookLink.href = `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`;
         twitterLink.href = `https://twitter.com/intent/tweet?url=${encodedUrl}&text=${shareText}`;
         shareLinkInput.value = url;
@@ -150,14 +156,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     /**
-     * Configure les événements pour les boutons de copie et les liens sociaux
+     * Configure les événements des boutons : copie, partage, fermeture
      */
     function setupShareLinkEvents(url) {
-        // Ajouter l'événement de copie
         const copyBtn = document.getElementById("copyShareLinkBtn");
         const copyText = document.getElementById("copyShareLinkText");
         const shareLinkInput = document.getElementById("shareLinkInput");
 
+        // Copier le lien via bouton ou texte cliquable
         if (copyBtn && shareLinkInput) {
             copyBtn.addEventListener("click", function () {
                 copyToClipboard(url, shareLinkInput);
@@ -170,37 +176,32 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
-        // Ajouter les événements pour fermer le modal après clic sur les liens sociaux
+        // Fermer le modal après clic sur un réseau social
         const socialLinks =
             shareModalContent.querySelectorAll('a[target="_blank"]');
         socialLinks.forEach((link) => {
             link.addEventListener("click", function () {
-                // Fermer le modal après un court délai pour permettre l'ouverture du lien
-                setTimeout(() => {
-                    closeModal();
-                }, 100);
+                setTimeout(() => closeModal(), 100);
             });
         });
     }
 
     /**
-     * Copie le lien dans le presse-papier et ferme le modal
+     * Copie le lien dans le presse-papier puis ferme le modal
      */
     async function copyToClipboard(url, inputElement) {
         try {
-            // Sélectionner le texte dans l'input
+            // Sélection du texte dans l'input
             inputElement.select();
-            inputElement.setSelectionRange(0, 99999); // Pour mobile
+            inputElement.setSelectionRange(0, 99999); // Compatibilité mobile
 
-            // Copier dans le presse-papier
+            // Copie native
             await navigator.clipboard.writeText(url);
 
-            // Afficher un toast de confirmation
             if (window.showToast) {
                 window.showToast("Lien copié dans le presse-papier", "success");
             }
 
-            // Fermer le modal
             closeModal();
         } catch (error) {
             console.error("Erreur lors de la copie:", error);

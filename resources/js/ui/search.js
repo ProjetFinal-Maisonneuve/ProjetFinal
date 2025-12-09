@@ -1,7 +1,7 @@
 // Fichier unifié pour la recherche (catalogue, liste d'achat, et cellier)
 // Détecte automatiquement le contexte et adapte le comportement
 
-// Champs du DOM
+// Champs du DOM pour la recherche et les filtres
 const searchInput = document.getElementById("searchInput");
 const paysFilter = document.getElementById("paysFilter");
 const typeFilter = document.getElementById("typeFilter");
@@ -11,354 +11,343 @@ const priceMinFilter = document.getElementById("priceMin");
 const priceMaxFilter = document.getElementById("priceMax");
 const sortFilter = document.getElementById("sortFilter");
 
-// Boutons
+// Boutons liés à la gestion des filtres
 const resetFiltersBtn = document.getElementById("resetFiltersBtn");
 const applyFiltersBtn = document.getElementById("applyFiltersBtn");
+const closeBtn = document.getElementById("closeFiltersBtn");
 
-// Bottom sheet filtres
+// Bottom sheet mobile pour filtres et tri
 const sortOptionsBtn = document.getElementById("sortOptionsBtn");
 const filtersContainer = document.getElementById("filtersContainer");
 const filtersOverlay = document.getElementById("filtersOverlay");
 const dragHandle = document.getElementById("dragHandle");
 
-// Détection du contexte
-// Cellier : utilise data-search-url et data-target-container
-const cellierRoot = document.querySelector("[data-search-url][data-target-container='cellarBottlesContainer']");
-// Catalogue/Liste d'achat : utilise data-container
+// Détection automatique du contexte d'utilisation du script
+// Le cellier possède data-search-url + conteneur spécifique
+const cellierRoot = document.querySelector(
+    "[data-search-url][data-target-container='cellarBottlesContainer']"
+);
+
+// Le catalogue et la liste d'achat partagent data-container
 const catalogueRoot = document.querySelector("[data-container]");
 
-let isCellier = false;
+let isCellier = false; // Flag permettant de savoir quel mode est actif
 let containerId, container, baseUrl, suggestionUrl;
 
+// Configuration du mode cellier
 if (cellierRoot) {
-    // Mode cellier
     isCellier = true;
-    containerId = cellierRoot.dataset.targetContainer || "cellarBottlesContainer";
+    containerId =
+        cellierRoot.dataset.targetContainer || "cellarBottlesContainer";
     container = document.getElementById(containerId);
     baseUrl = cellierRoot.dataset.searchUrl;
-    suggestionUrl = null; // Pas de suggestions pour le cellier
-} else if (catalogueRoot) {
-    // Mode catalogue ou liste d'achat
+    suggestionUrl = null; // Les suggestions n'existent pas pour le cellier
+}
+// Configuration du mode catalogue ou liste d'achat
+else if (catalogueRoot) {
     containerId = catalogueRoot.dataset.container || "catalogueContainer";
     container = document.getElementById(containerId);
     baseUrl = catalogueRoot.dataset.url || "/catalogue/search";
     suggestionUrl = catalogueRoot.dataset.suggestionUrl || "/catalogue/suggest";
 }
 
-// Si aucun contexte n'est trouvé, ne pas initialiser le script
-// (c'est normal sur certaines pages comme l'admin qui utilisent un autre système de recherche)
+// Si aucun contexte valide n'est trouvé, le script ne s'exécute pas
 if (!cellierRoot && !catalogueRoot) {
-    // Sortir silencieusement - pas besoin de warning
-    // Toutes les initialisations suivantes ne s'exécuteront pas
+    // Page non concernée (admin ou autres), ne rien faire
 } else {
-    // Initialiser uniquement si un contexte a été trouvé
-    
-// Suggestions (uniquement pour catalogue/liste d'achat)
-const suggestionsBox = document.getElementById("suggestionsBox");
-let suggestionTimeout = null;
+    // Initialisation du comportement dynamique
 
-let sortFilterDefault = "date_import-desc";
-if (containerId === "listeAchatContainer") {
-    sortFilterDefault = "date_ajout-desc";
-    console.log(sortFilterDefault);
-}
+    // Boîte d'affichage des suggestions à la saisie (uniquement catalogue/liste)
+    const suggestionsBox = document.getElementById("suggestionsBox");
+    let suggestionTimeout = null; // Timeout pour la saisie utilisateur
 
-// Reset des filtres
-function resetFilters() {
-    if (searchInput) searchInput.value = "";
-    if (paysFilter) paysFilter.value = "";
-    if (typeFilter) typeFilter.value = "";
-    if (regionFilter) regionFilter.value = "";
-    if (millesimeFilter) millesimeFilter.value = "";
-    if (priceMinFilter) priceMinFilter.value = "";
-    if (priceMaxFilter) priceMaxFilter.value = "";
-    if (sortFilter) {
-        if (isCellier) {
-            sortFilter.value = "";
-        } else {
-            sortFilter.value = sortFilterDefault;
+    // Valeur par défaut du tri selon le contexte
+    let sortFilterDefault = "date_import-desc";
+    if (containerId === "listeAchatContainer") {
+        sortFilterDefault = "date_ajout-desc";
+    }
+
+    // Remise à zéro des filtres et relancement de la recherche
+    function resetFilters() {
+        if (searchInput) searchInput.value = "";
+        if (paysFilter) paysFilter.value = "";
+        if (typeFilter) typeFilter.value = "";
+        if (regionFilter) regionFilter.value = "";
+        if (millesimeFilter) millesimeFilter.value = "";
+        if (priceMinFilter) priceMinFilter.value = "";
+        if (priceMaxFilter) priceMaxFilter.value = "";
+        if (sortFilter) {
+            sortFilter.value = isCellier ? "" : sortFilterDefault;
         }
-    }
-    if (isCellier) {
-        fetchCellier();
-    } else {
-        fetchCatalogue();
-    }
-}
 
-// Ouverture / fermeture panel
-function toggleSortOptions() {
-    if (!filtersContainer || !filtersOverlay) return;
-    const isHidden = filtersContainer.classList.contains("hidden");
-
-    if (isHidden) {
-        filtersOverlay.classList.remove("hidden");
-        filtersContainer.classList.remove("hidden");
-        setTimeout(() => {
-            filtersOverlay.classList.add("opacity-50");
-            filtersContainer.classList.remove("translate-y-[100%]");
-        }, 10);
-    } else {
-        filtersContainer.classList.add("translate-y-[100%]");
-        filtersOverlay.classList.remove("opacity-50");
-        setTimeout(() => {
-            filtersOverlay.classList.add("hidden");
-            filtersContainer.classList.add("hidden");
-        }, 500);
-    }
-}
-
-if (sortOptionsBtn) sortOptionsBtn.addEventListener("click", toggleSortOptions);
-if (filtersOverlay) filtersOverlay.addEventListener("click", toggleSortOptions);
-if (dragHandle) dragHandle.addEventListener("click", toggleSortOptions);
-
-// Debounce
-function debounce(fn, delay = 300) {
-    let timer;
-    return (...args) => {
-        clearTimeout(timer);
-        timer = setTimeout(() => fn(...args), delay);
-    };
-}
-
-// Traduire "prix-asc", "nom-desc"... pour le backend cellier
-function buildSortForCellier() {
-    if (!sortFilter || !sortFilter.value) {
-        return { sort: "nom", direction: "asc" };
-    }
-
-    const [sortBy, sortDir] = sortFilter.value.split("-");
-    let sort = "nom";
-
-    switch (sortBy) {
-        case "prix":
-            sort = "prix";
-            break;
-        case "millesime":
-            sort = "millesime";
-            break;
-        case "date_import":
-        case "date_ajout":
-            sort = "date_ajout";
-            break;
-        case "nom":
-        default:
-            sort = "nom";
-    }
-
-    const direction = sortDir === "desc" ? "desc" : "asc";
-    return { sort, direction };
-}
-
-// Fetch cellier
-function fetchCellier(url) {
-    if (!container) return;
-
-    const { sort, direction } = buildSortForCellier();
-
-    const params = new URLSearchParams({
-        nom: searchInput?.value || "",
-        pays: paysFilter?.value || "",
-        type: typeFilter?.value || "",
-        region: regionFilter?.value || "",
-        millesime: millesimeFilter?.value || "",
-        sort,
-        direction,
-    });
-
-    if (priceMinFilter?.value) params.append("prix_min", priceMinFilter.value);
-    if (priceMaxFilter?.value) params.append("prix_max", priceMaxFilter.value);
-
-    const baseUrlFinal = url || baseUrl;
-    const finalUrl = baseUrlFinal.includes("?")
-        ? `${baseUrlFinal}&${params.toString()}`
-        : `${baseUrlFinal}?${params.toString()}`;
-
-    fetch(finalUrl)
-        .then((res) => res.json())
-        .then((data) => {
-            container.innerHTML = data.html;
-            bindPaginationLinks();
-            window.dispatchEvent(new CustomEvent("cellierReloaded"));
-        })
-        .catch((err) => console.error("Erreur fetch cellier :", err));
-}
-
-// Fetch catalogue / liste d'achat
-function fetchCatalogue(customUrl = baseUrl) {
-    if (!container) return;
-
-    // Tri
-    let sortBy = "";
-    let sortDirection = "";
-
-    if (sortFilter && sortFilter.value) {
-        const [field, dir] = sortFilter.value.split("-");
-        sortBy = field || "";
-        sortDirection = dir || "";
-    }
-
-    // Params de la requête
-    const params = new URLSearchParams({
-        search: searchInput?.value || "",
-        pays: paysFilter?.value || "",
-        type: typeFilter?.value || "",
-        region: regionFilter?.value || "",
-        millesime: millesimeFilter?.value || "",
-        prix_min: priceMinFilter?.value || "",
-        prix_max: priceMaxFilter?.value || "",
-        sort_by: sortBy,
-        sort_direction: sortDirection,
-    });
-
-    // URL finale
-    const finalUrl = customUrl.includes("?")
-        ? `${customUrl}&${params.toString()}`
-        : `${customUrl}?${params.toString()}`;
-
-    // Requête AJAX
-    fetch(finalUrl)
-        .then((res) => res.json())
-        .then((data) => {
-            if (container) {
-                container.innerHTML = data.html;
-                window.dispatchEvent(new CustomEvent("catalogueReloaded"));
-
-                // Re-bind pagination links pour AJAX
-                bindPaginationLinks();
-            }
-
-            // Masquer l'overlay de chargement après le chargement AJAX
-            const overlay = document.getElementById("page-loading-overlay");
-            if (overlay) {
-                overlay.classList.add("hidden");
-                overlay.setAttribute("aria-hidden", "true");
-                overlay.innerHTML = "";
-            }
-        })
-        .catch((err) => {
-            console.error("Erreur lors du fetch catalogue :", err);
-
-            // Masquer l'overlay même en cas d'erreur
-            const overlay = document.getElementById("page-loading-overlay");
-            if (overlay) {
-                overlay.classList.add("hidden");
-                overlay.setAttribute("aria-hidden", "true");
-                overlay.innerHTML = "";
-            }
-        });
-}
-
-// Suggestions recherche (uniquement catalogue/liste d'achat)
-function renderSuggestions(items) {
-    if (!suggestionsBox) return;
-
-    if (!items.length) {
-        suggestionsBox.classList.add("hidden");
-        return;
-    }
-
-    suggestionsBox.innerHTML = items
-        .map(
-            (item) => `
-        <div class="px-3 py-2 cursor-pointer hover:bg-gray-100 suggestion-item"
-             data-value="${item.nom}">
-            ${item.nom}
-        </div>`
-        )
-        .join("");
-
-    suggestionsBox.classList.remove("hidden");
-
-    document.querySelectorAll(".suggestion-item").forEach((el) => {
-        el.addEventListener("click", () => {
-            searchInput.value = el.dataset.value;
-            suggestionsBox.classList.add("hidden");
-            if (isCellier) {
-                debouncedFetchCellier();
-            } else {
-                debouncedFetchCatalogue();
-            }
-        });
-    });
-}
-
-// DebouncedFetch
-const debouncedFetchCatalogue = debounce(() => fetchCatalogue(), 300);
-const debouncedFetchCellier = debounce(() => fetchCellier(), 300);
-
-// Écoute entrée recherche
-if (searchInput) {
-    if (isCellier) {
-        searchInput.addEventListener("input", () => debouncedFetchCellier());
-    } else {
-        searchInput.addEventListener("input", () => debouncedFetchCatalogue());
-
-        // Suggestions (uniquement pour catalogue/liste d'achat)
-        searchInput.addEventListener("input", (e) => {
-            const query = e.target.value.trim();
-            if (query.length < 1) {
-                if (suggestionsBox) suggestionsBox.classList.add("hidden");
-                return;
-            }
-
-            clearTimeout(suggestionTimeout);
-            suggestionTimeout = setTimeout(() => {
-                fetch(`${suggestionUrl}?search=${encodeURIComponent(query)}`)
-                    .then((res) => res.json())
-                    .then((items) => renderSuggestions(items));
-            }, 150);
-        });
-    }
-}
-
-// Boutons appliquer / reset
-if (applyFiltersBtn) {
-    applyFiltersBtn.addEventListener("click", () => {
+        // Lancer la recherche en fonction du mode
         if (isCellier) {
             fetchCellier();
         } else {
             fetchCatalogue();
         }
-        toggleSortOptions(); // Ferme le panneau
-    });
-}
+    }
 
-if (resetFiltersBtn) {
-    resetFiltersBtn.addEventListener("click", resetFilters);
-}
+    // Ouvre ou ferme le panneau mobile (tri et filtres)
+    function toggleSortOptions() {
+        if (!filtersContainer || !filtersOverlay) return;
+        const isHidden = filtersContainer.classList.contains("hidden");
 
-// Cacher suggestions au clic (uniquement catalogue/liste d'achat)
-if (searchInput && suggestionsBox && !isCellier) {
-    document.addEventListener("click", (e) => {
-        if (
-            !searchInput.contains(e.target) &&
-            !suggestionsBox.contains(e.target)
-        ) {
-            suggestionsBox.classList.add("hidden");
+        if (isHidden) {
+            filtersOverlay.classList.remove("hidden");
+            filtersContainer.classList.remove("hidden");
+            setTimeout(() => {
+                filtersOverlay.classList.add("opacity-50");
+                filtersContainer.classList.remove("translate-y-[100%]");
+            }, 10);
+        } else {
+            filtersContainer.classList.add("translate-y-[100%]");
+            filtersOverlay.classList.remove("opacity-50");
+            setTimeout(() => {
+                filtersOverlay.classList.add("hidden");
+                filtersContainer.classList.add("hidden");
+            }, 500);
         }
-    });
-}
+    }
 
-// Pagination AJAX
-function bindPaginationLinks() {
-    if (!container) return;
-    const links = container.querySelectorAll("a[href*='page=']");
-    links.forEach((link) => {
-        link.addEventListener("click", (e) => {
-            e.preventDefault();
-            if (isCellier) {
-                fetchCellier(link.href);
-            } else {
-                fetchCatalogue(link.href);
+    // Attache d'événements au panneau mobile
+    if (sortOptionsBtn)
+        sortOptionsBtn.addEventListener("click", toggleSortOptions);
+    if (filtersOverlay)
+        filtersOverlay.addEventListener("click", toggleSortOptions);
+    if (dragHandle) dragHandle.addEventListener("click", toggleSortOptions);
+    if (closeBtn) closeBtn.addEventListener("click", toggleSortOptions);
+
+    // Fonction utilitaire debounce pour éviter les requêtes trop fréquentes
+    function debounce(fn, delay = 300) {
+        let timer;
+        return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => fn(...args), delay);
+        };
+    }
+
+    // Conversion du tri textuel pour l'API du cellier
+    function buildSortForCellier() {
+        if (!sortFilter || !sortFilter.value) {
+            return { sort: "nom", direction: "asc" };
+        }
+
+        const [sortBy, sortDir] = sortFilter.value.split("-");
+        let sort = "nom";
+
+        switch (sortBy) {
+            case "prix":
+                sort = "prix";
+                break;
+            case "millesime":
+                sort = "millesime";
+                break;
+            case "date_import":
+            case "date_ajout":
+                sort = "date_ajout";
+                break;
+            default:
+                sort = "nom";
+        }
+
+        const direction = sortDir === "desc" ? "desc" : "asc";
+        return { sort, direction };
+    }
+
+    // Charge les bouteilles du cellier en AJAX selon les filtres actifs
+    function fetchCellier(url) {
+        if (!container) return;
+
+        const { sort, direction } = buildSortForCellier();
+
+        const params = new URLSearchParams({
+            nom: searchInput?.value || "",
+            pays: paysFilter?.value || "",
+            type: typeFilter?.value || "",
+            region: regionFilter?.value || "",
+            millesime: millesimeFilter?.value || "",
+            sort,
+            direction,
+        });
+
+        if (priceMinFilter?.value)
+            params.append("prix_min", priceMinFilter.value);
+        if (priceMaxFilter?.value)
+            params.append("prix_max", priceMaxFilter.value);
+
+        const baseUrlFinal = url || baseUrl;
+        const finalUrl = baseUrlFinal.includes("?")
+            ? `${baseUrlFinal}&${params.toString()}`
+            : `${baseUrlFinal}?${params.toString()}`;
+
+        fetch(finalUrl)
+            .then((res) => res.json())
+            .then((data) => {
+                container.innerHTML = data.html;
+                bindPaginationLinks();
+                window.dispatchEvent(new CustomEvent("cellierReloaded"));
+            })
+            .catch((err) => console.error("Erreur fetch cellier :", err));
+    }
+
+    // Charge le catalogue ou la liste d'achat via AJAX
+    function fetchCatalogue(customUrl = baseUrl) {
+        if (!container) return;
+
+        let sortBy = "";
+        let sortDirection = "";
+
+        if (sortFilter && sortFilter.value) {
+            const [field, dir] = sortFilter.value.split("-");
+            sortBy = field || "";
+            sortDirection = dir || "";
+        }
+
+        const params = new URLSearchParams({
+            search: searchInput?.value || "",
+            pays: paysFilter?.value || "",
+            type: typeFilter?.value || "",
+            region: regionFilter?.value || "",
+            millesime: millesimeFilter?.value || "",
+            prix_min: priceMinFilter?.value || "",
+            prix_max: priceMaxFilter?.value || "",
+            sort_by: sortBy,
+            sort_direction: sortDirection,
+        });
+
+        const finalUrl = customUrl.includes("?")
+            ? `${customUrl}&${params.toString()}`
+            : `${customUrl}?${params.toString()}`;
+
+        fetch(finalUrl)
+            .then((res) => res.json())
+            .then((data) => {
+                container.innerHTML = data.html;
+                window.dispatchEvent(new CustomEvent("catalogueReloaded"));
+                bindPaginationLinks();
+
+                // Cache l'overlay de chargement si utilisé
+                const overlay = document.getElementById("page-loading-overlay");
+                if (overlay) {
+                    overlay.classList.add("hidden");
+                    overlay.setAttribute("aria-hidden", "true");
+                    overlay.innerHTML = "";
+                }
+            })
+            .catch((err) => {
+                console.error("Erreur lors du fetch catalogue :", err);
+
+                const overlay = document.getElementById("page-loading-overlay");
+                if (overlay) {
+                    overlay.classList.add("hidden");
+                    overlay.setAttribute("aria-hidden", "true");
+                    overlay.innerHTML = "";
+                }
+            });
+    }
+
+    // Suggestion intelligente lors de la saisie (uniquement catalogue/liste d'achat)
+    function renderSuggestions(items) {
+        if (!suggestionsBox) return;
+
+        if (!items.length) {
+            suggestionsBox.classList.add("hidden");
+            return;
+        }
+
+        suggestionsBox.innerHTML = items
+            .map(
+                (item) => `
+        <div class="px-3 py-2 cursor-pointer hover:bg-gray-100 suggestion-item"
+             data-value="${item.nom}">
+            ${item.nom}
+        </div>`
+            )
+            .join("");
+
+        suggestionsBox.classList.remove("hidden");
+
+        document.querySelectorAll(".suggestion-item").forEach((el) => {
+            el.addEventListener("click", () => {
+                searchInput.value = el.dataset.value;
+                suggestionsBox.classList.add("hidden");
+                isCellier ? debouncedFetchCellier() : debouncedFetchCatalogue();
+            });
+        });
+    }
+
+    // Debounced fetchers
+    const debouncedFetchCatalogue = debounce(() => fetchCatalogue(), 300);
+    const debouncedFetchCellier = debounce(() => fetchCellier(), 300);
+
+    // Recherche live selon le contexte
+    if (searchInput) {
+        if (isCellier) {
+            searchInput.addEventListener("input", debouncedFetchCellier);
+        } else {
+            searchInput.addEventListener("input", debouncedFetchCatalogue);
+
+            // Système de suggestions
+            searchInput.addEventListener("input", (e) => {
+                const query = e.target.value.trim();
+                if (query.length < 1) {
+                    suggestionsBox?.classList.add("hidden");
+                    return;
+                }
+
+                clearTimeout(suggestionTimeout);
+                suggestionTimeout = setTimeout(() => {
+                    fetch(
+                        `${suggestionUrl}?search=${encodeURIComponent(query)}`
+                    )
+                        .then((res) => res.json())
+                        .then((items) => renderSuggestions(items));
+                }, 150);
+            });
+        }
+    }
+
+    // Appliquer les filtres
+    if (applyFiltersBtn) {
+        applyFiltersBtn.addEventListener("click", () => {
+            isCellier ? fetchCellier() : fetchCatalogue();
+            toggleSortOptions(); // Ferme la bottom sheet mobile
+        });
+    }
+
+    // Réinitialiser les filtres
+    if (resetFiltersBtn) {
+        resetFiltersBtn.addEventListener("click", resetFilters);
+    }
+
+    // Fermeture automatique des suggestions au clic extérieur
+    if (searchInput && suggestionsBox && !isCellier) {
+        document.addEventListener("click", (e) => {
+            if (
+                !searchInput.contains(e.target) &&
+                !suggestionsBox.contains(e.target)
+            ) {
+                suggestionsBox.classList.add("hidden");
             }
         });
-    });
-}
+    }
 
-// Initialisation
-if (container) {
-    bindPaginationLinks();
-}
+    // Rebind des liens de pagination en AJAX
+    function bindPaginationLinks() {
+        if (!container) return;
 
-} // Fin du bloc d'initialisation conditionnelle
+        const links = container.querySelectorAll("a[href*='page=']");
+        links.forEach((link) => {
+            link.addEventListener("click", (e) => {
+                e.preventDefault();
+                isCellier ? fetchCellier(link.href) : fetchCatalogue(link.href);
+            });
+        });
+    }
+
+    // Lier la pagination dès la première exécution
+    if (container) {
+        bindPaginationLinks();
+    }
+} // Fin bloc d'initialisation conditionnelle

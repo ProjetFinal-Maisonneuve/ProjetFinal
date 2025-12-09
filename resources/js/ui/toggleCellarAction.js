@@ -1,41 +1,51 @@
-// Afficher ou masquer les boutons d'action de la cave au clic du bouton de réglage
-// Sélection des éléments du DOM
+// Afficher ou masquer les boutons d'action des caves au clic du bouton de réglage
+
+// Bouton permettant d'activer/désactiver le mode gestion
 const cellarToggleActionBtn = document.getElementById("setting-btn");
+
+// Toutes les boîtes représentant un cellier
 const cellarBoxes = document.querySelectorAll(".cellar-box");
-// Vérification de l'existence du bouton
+
+// Exécuter seulement si le bouton est présent sur la page
 if (cellarToggleActionBtn) {
-    // Initialisation de l'état du bouton
+    // État du bouton (false = mode normal / true = mode gestion)
     let clicked = false;
+
+    // Clic sur le bouton de réglage
     cellarToggleActionBtn.addEventListener("click", () => {
-        clicked = !clicked;
+        clicked = !clicked; // Inverse l'état
+
         if (clicked) {
-            // Utiliser des classes Tailwind existantes au lieu de bg-focus et border-muted
+            // Mode activé → visuel actif sur le bouton
             cellarToggleActionBtn.classList.add(
                 "bg-blue-600",
                 "border-blue-600",
                 "border"
             );
-            // Affiche les boutons d'action dans chaque boîte de cave
+
+            // Affiche les actions sur chaque cellier
             cellarBoxes.forEach((box) => {
-                box.classList.add("animate-shake");
+                box.classList.add("animate-shake"); // Animation visuelle
                 const actionBtns = box.querySelector(".cellar-action-btns");
-                // VÉRIFICATION : s'assurer que l'élément existe avant d'accéder à classList
+
+                // Vérifier que l'élément existe pour éviter une erreur JS
                 if (actionBtns) {
                     actionBtns.classList.remove("hidden");
                 }
             });
-            // Ajouter des classes pour l'animation de secousse
         } else {
+            // Mode désactivé → retour à l'état normal du bouton
             cellarToggleActionBtn.classList.remove(
                 "bg-blue-600",
                 "border-blue-600",
                 "border"
             );
-            // Cacher les boutons d'action dans chaque boîte de cave
+
+            // Masque les actions sur chaque cellier
             cellarBoxes.forEach((box) => {
                 box.classList.remove("animate-shake");
                 const actionBtns = box.querySelector(".cellar-action-btns");
-                // VÉRIFICATION : s'assurer que l'élément existe avant d'accéder à classList
+
                 if (actionBtns) {
                     actionBtns.classList.add("hidden");
                 }
