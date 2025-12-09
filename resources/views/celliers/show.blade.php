@@ -5,7 +5,15 @@
 @section('add-wine-btn', 'true')
 
 @section('content')
-<section class="p-4 pt-2" aria-label="Détails du cellier {{ $cellier->nom }}">
+<section class="p-4 " aria-label="Détails du cellier {{ $cellier->nom }}">
+
+{{-- Lien retour vers la liste des celliers --}}
+    <x-back-btn
+        route="cellar.index"
+        label="Retour à mes celliers"
+        class="mb-4 pt-18"
+    />
+
     <x-page-header
         :title="$cellier->nom"
         :undertitle="$undertitle"
