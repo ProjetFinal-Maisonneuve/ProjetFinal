@@ -7,15 +7,6 @@
     {{-- Insertion du composant d'en-tête de page --}}
     <x-page-header title="Créer un cellier" />
 
-    {{-- Affichage des erreurs de validation --}}
-    @if ($errors->any())
-    <div class="bg-red-100 text-red-700 p-3 rounded text-sm mb-4">
-        @foreach ($errors->all() as $error)
-        <p>• {{ $error }}</p>
-        @endforeach
-    </div>
-    @endif
-
     <div class="mt-6">
         <form
             action="{{ route('cellar.store') }}"
