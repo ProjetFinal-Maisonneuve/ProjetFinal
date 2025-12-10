@@ -76,8 +76,9 @@ if (!cellierRoot && !catalogueRoot) {
         if (millesimeFilter) millesimeFilter.value = "";
         if (priceMinFilter) priceMinFilter.value = "";
         if (priceMaxFilter) priceMaxFilter.value = "";
+
         if (sortFilter) {
-            sortFilter.value = isCellier ? "" : sortFilterDefault;
+            sortFilter.value = sortFilterDefault;
         }
 
         // Lancer la recherche en fonction du mode
