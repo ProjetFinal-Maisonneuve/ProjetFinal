@@ -149,7 +149,7 @@ Route::middleware(['auth', 'active'])->group(function () {
 
     Route::put('/liste-achat/{item}', [ListeAchatController::class, 'update'])
         ->name('listeAchat.update');
-    
+
     Route::patch('/liste-achat/{item}', [ListeAchatController::class, 'update'])
         ->name('listeAchat.update.patch');
 
@@ -178,7 +178,7 @@ Route::middleware(['auth', 'active'])->group(function () {
 
         $items = $user->listeAchat()->with('bouteilleCatalogue')->get();
 
-        $totalPrice = $items->sum(function($item) {
+        $totalPrice = $items->sum(function ($item) {
             if (!$item->bouteilleCatalogue) {
                 return 0;
             }
@@ -226,4 +226,11 @@ Route::middleware(['auth', 'active', 'is_admin'])
         // Supprimer un usager
         Route::delete('/users/{id}', [AdminController::class, 'destroy'])
             ->name('users.destroy');
+
+        // ROUTES STATISTIQUES
+        Route::get('/statistics', [AdminController::class, 'statistics'])
+            ->name('statistics.index');
+
+        Route::get('/statistics/data', [AdminController::class, 'statisticsData'])
+            ->name('statistics.data');
     });
