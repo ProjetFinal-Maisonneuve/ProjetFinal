@@ -8,7 +8,7 @@
     <h1 class="text-3xl font-bold font-heading text-heading">{{ $title }}</h1>
     {{-- Sous-titre de la page si présent --}}
     @if ($undertitle !== '')
-        <p class="text-sm text-text-muted">{{ $undertitle }}</p>
+        <p class="text-sm text-text-muted">{!! html_entity_decode($undertitle) !!}</p>
     @endif
 </div>
 

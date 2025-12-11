@@ -51,12 +51,12 @@ class BouteilleCatalogue extends Model
 
         // Normaliser le chemin : enlever tous les préfixes storage/ et / au début
         $imagePath = ltrim($this->url_image, '/');
-        
+
         // Enlever tous les préfixes "storage/" jusqu'à ce qu'il n'y en ait plus
         while (str_starts_with($imagePath, 'storage/')) {
             $imagePath = substr($imagePath, 8); // Enlever "storage/" (8 caractères)
         }
-        
+
         // Ajouter storage/ une seule fois et utiliser asset() pour générer l'URL complète
         return asset('storage/' . $imagePath);
     }
@@ -72,24 +72,24 @@ class BouteilleCatalogue extends Model
     {
         // Utiliser le thumbnail s'il existe, sinon fallback sur l'image principale
         $imageUrl = $this->url_image_thumbnail ?: $this->url_image;
-        
+
         if (!$imageUrl) {
             return null;
         }
 
         // Normaliser le chemin : enlever tous les préfixes storage/ et / au début
         $imagePath = ltrim($imageUrl, '/');
-        
+
         // Enlever tous les préfixes "storage/" jusqu'à ce qu'il n'y en ait plus
         while (str_starts_with($imagePath, 'storage/')) {
             $imagePath = substr($imagePath, 8); // Enlever "storage/" (8 caractères)
         }
-        
+
         // Si c'est une URL externe (commence par http), la retourner telle quelle
         if (str_starts_with($imagePath, 'http')) {
             return $imagePath;
         }
-        
+
         // Ajouter storage/ une seule fois et utiliser asset() pour générer l'URL complète
         return asset('storage/' . $imagePath);
     }
@@ -108,5 +108,10 @@ class BouteilleCatalogue extends Model
     public function region()
     {
         return $this->belongsTo(Region::class, 'id_region');
+    }
+
+    public function signalements()
+    {
+        return $this->hasMany(Signalement::class, 'bouteille_catalogue_id');
     }
 }

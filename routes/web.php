@@ -10,6 +10,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ListeAchatController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\PartageController;
+use App\Http\Controllers\SignalementController;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 
@@ -30,6 +31,18 @@ Route::post('/logout', [AuthController::class, 'logout'])
 // Routes protégées : seulement accessibles si la session est ouverte
 Route::middleware(['auth', 'active'])->group(function () {
     Route::get('/', [CatalogueController::class, 'index'])->name('bouteille.catalogue');
+
+    // Signalement de problème sur une bouteille du catalogue
+    Route::get('/catalogue/{bouteille}/signaler', [SignalementController::class, 'create'])
+        ->name('signalement.create');
+
+    // Enregistrement d'un signalement
+    Route::post('/catalogue/{bouteille}/signaler', [SignalementController::class, 'store'])
+        ->name('signalement.store');
+
+    // Suppression d'un signalement
+    Route::delete('/signalement/{signalement}', [SignalementController::class, 'destroy'])
+        ->name('signalement.destroy');
 
     // Catalogue de bouteilles
     Route::get('/catalogue/search', [CatalogueController::class, 'search'])
@@ -149,7 +162,7 @@ Route::middleware(['auth', 'active'])->group(function () {
 
     Route::put('/liste-achat/{item}', [ListeAchatController::class, 'update'])
         ->name('listeAchat.update');
-    
+
     Route::patch('/liste-achat/{item}', [ListeAchatController::class, 'update'])
         ->name('listeAchat.update.patch');
 
@@ -178,7 +191,7 @@ Route::middleware(['auth', 'active'])->group(function () {
 
         $items = $user->listeAchat()->with('bouteilleCatalogue')->get();
 
-        $totalPrice = $items->sum(function($item) {
+        $totalPrice = $items->sum(function ($item) {
             if (!$item->bouteilleCatalogue) {
                 return 0;
             }

@@ -195,7 +195,7 @@
 
                         {{-- Catalogue (Ajout) --}}
                         @if($isCatalogue)
-                        <form class="flex flex-col sm:flex-row gap-4 items-end sm:items-stretch" aria-label="Ajouter au cellier">
+                        <form class="flex flex-col sm:flex-row gap-4 items-end sm:items-stretch md-5" aria-label="Ajouter au cellier">
                             <input type="hidden" name="bottle_id" value="{{ $bouteilleCatalogue->id }}">
 
                             <div class="w-full sm:w-32">
@@ -217,6 +217,7 @@
                                 Ajouter au cellier
                             </button>
                         </form>
+                        <a href="{{ route('signalement.create', $bouteilleCatalogue->id) }}" class="inline-block mt-4 text-base font-semibold text-primary hover:text-primary-active hover:underline transition-colors px-3 py-2 rounded-lg hover:bg-primary/10">Signaler un problème</a>
 
                         {{-- Cellier (Notes & Modif) --}}
                         @else
