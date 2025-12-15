@@ -110,9 +110,12 @@ php artisan saq:import --limite=10
 
 🔗 Liens et ressources
 
-🌐 Site en ligne : Voir sur WebDev
-🗂 Jira – Backlog et sprints : [Voir sur Jira](https
-🎨 Maquettes Figma : Accéder aux maquettes
+| Ressource                                    | Lien                                                                                                                                                                             |
+| -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🌐 **Site en ligne**                         | [https://app.e2395866.webdevmaisonneuve.ca/login](https://app.e2395866.webdevmaisonneuve.ca/login)                                                                               |
+| 🗂 **Jira – Backlog & Sprints**              | [https://cmaisonneuve-team-tp.atlassian.net/jira/software/projects/PV/boards/34/backlog](https://cmaisonneuve-team-tp.atlassian.net/jira/software/projects/PV/boards/34/backlog) |
+| 🎨 **Maquettes Figma – Wireframes & UI Kit** | [https://www.figma.com/design/PD4OeeSCbSOjI4fyTmvQdE/Maquette-Philippe](https://www.figma.com/design/PD4OeeSCbSOjI4fyTmvQdE/Maquette-Philippe)                                   |
+
 
 ---
 
