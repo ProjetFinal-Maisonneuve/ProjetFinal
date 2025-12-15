@@ -108,7 +108,7 @@ php artisan saq:import --limite=10
 - Disparition automatique après 2.5 secondes
 - Support de plusieurs toasts simultanés
 
-🔗 Liens et ressources
+## 🔗 Liens et ressources
 
 | Ressource                                    | Lien                                                                                                                                                                             |
 | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
